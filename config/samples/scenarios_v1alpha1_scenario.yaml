@@ -1,0 +1,34 @@
+apiVersion: scenarios.karness.io/v1alpha1
+kind: Scenario
+metadata:
+  name: example-foo
+spec:
+  name: "test karness"
+  description: "check functionality"
+  variables:
+    XXX_KEY: YYY_VALUE
+  events:
+    -
+      name: grpc call
+      description: try to check field
+      action:
+        name: X
+        grpc:
+          addr: sportsbook-settings-sv.odds-compiler.svc.cluster.local:9000
+          package: egt.oddscompiler.sportsbooksettings.v3.public
+          service: InfoService
+          rpc: GetEventInfo
+        bind_result:
+          VAR_NAME: "{{.gotemplate[0].field}}"
+        body:
+          kv:
+            field_x: value_y
+      complete:
+        name: check field from response
+        condition:
+          - response:
+              status: "OK"
+              body:
+                kv:
+                  XXXX: YYYY
+

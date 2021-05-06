@@ -1,0 +1,24 @@
+# permissions for end users to edit scenarios.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: scenario-editor-role
+rules:
+- apiGroups:
+  - scenarios.karness.io
+  resources:
+  - scenarios
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - scenarios.karness.io
+  resources:
+  - scenarios/status
+  verbs:
+  - get
