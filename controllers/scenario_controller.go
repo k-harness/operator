@@ -18,10 +18,10 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/k-harness/operator/internal/harness"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -35,6 +35,8 @@ type ScenarioReconciler struct {
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
+
+	harness harness.Harness
 }
 
 //+kubebuilder:rbac:groups=scenarios.karness.io,resources=scenarios,verbs=get;list;watch;create;update;patch;delete
@@ -51,20 +53,29 @@ type ScenarioReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.2/pkg/reconcile
 func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = r.Log.WithValues("scenario", req.NamespacedName)
+	r.Log.WithValues("scenario", req.NamespacedName, "name", req.Name, "ns", req.Namespace).Info("")
 
 	// your logic here
-	s := scenariosv1alpha1.Scenario{}
+	s := &scenariosv1alpha1.Scenario{}
 	if err := r.Get(ctx, types.NamespacedName{
 		Namespace: req.Namespace,
 		Name:      req.Name,
-	}, &s); err != nil {
+	}, s); err != nil {
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, err
 	}
 
-	fmt.Printf("%+v", s)
+	//fmt.Printf(">>>>>> %+v", s)
+	if err := r.harness.Factory(ctx, r, req.Name, s); err != nil {
+		r.Log.Error(err, ">>>>>>>")
+	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *ScenarioReconciler) Update(item *scenariosv1alpha1.Scenario) error {
+	r.Log.WithValues("name", item.Name, "ns", item.Namespace, "XXX", ">>>>>>> UPDATE")
+
+	return r.Client.Update(context.TODO(), item)
 }
 
 // SetupWithManager sets up the controller with the Manager.
