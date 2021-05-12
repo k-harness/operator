@@ -65,9 +65,13 @@ func (s *scenarioProcessor) Step(ctx context.Context) bool {
 		s.entity.Status.Progress = sFmt(s.current, len(ev))
 
 		if err := s.control.Update(s.entity); err != nil {
-			klog.Errorf("scenario processor: %w", err)
+			klog.Errorf("scenario processor: %v", err)
 		}
 	}()
+
+	if len(s.entity.Spec.Events) == 0 {
+		return false
+	}
 
 	if err := s.process(ctx, s.entity.Spec.Events[s.current]); err != nil {
 		klog.Errorf("process error: %s", err.Error())
@@ -105,7 +109,7 @@ func (s *scenarioProcessor) action(ctx context.Context, a *models.Action) (res *
 	if a.GRPC != nil {
 		res, err = NewGRPC(a).Call(ctx, resp)
 		if err != nil {
-			klog.Errorf("scenario progress with action %q grpc call error %w", a.Name, err)
+			klog.Errorf("scenario progress with action %q grpc call error %v", a.Name, err)
 			// ok=true:  we want to try again
 			return nil, err
 		}

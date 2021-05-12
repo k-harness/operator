@@ -1,0 +1,14 @@
+== Operator
+
+=== Testing
+
+https://sdk.operatorframework.io/docs/building-operators/golang/testing/[SDK]
+
+https://book.kubebuilder.io/reference/envtest.html[builder]
+
+https://book.kubebuilder.io/cronjob-tutorial/writing-tests.html[builder tests writing]
+On M1 important to launch test via that point
+[source]
+----
+GOARCH=amd64 make test
+----

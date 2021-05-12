@@ -22,11 +22,12 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
-	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -44,9 +45,10 @@ var testEnv *envtest.Environment
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
 
-	RunSpecsWithDefaultAndCustomReporters(t,
-		"Controller Suite",
-		[]Reporter{printer.NewlineReporter{}})
+	RunSpecs(t, "Controller Suite")
+	//RunSpecsWithDefaultAndCustomReporters(t,
+	//	"Controller Suite",
+	//	[]Reporter{printer.NewlineReporter{}})
 }
 
 var _ = BeforeSuite(func() {
@@ -54,16 +56,35 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
+		CRDDirectoryPaths: []string{filepath.Join("..", "config", "crd", "bases"),
+			filepath.Join("..", "config", "samples", "example")},
 		ErrorIfCRDPathMissing: true,
+		CRDInstallOptions: envtest.CRDInstallOptions{
+			Paths:              []string{filepath.Join("..", "config", "samples", "example")},
+			ErrorIfPathMissing: true,
+		},
+		CRDs: []client.Object{
+			&scenariosv1alpha1.Scenario{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "1xxx1",
+					Namespace: "default",
+				},
+				Spec: scenariosv1alpha1.ScenarioSpec{
+					Name:        "123",
+					Description: "dx",
+					Events:      []scenariosv1alpha1.Event{},
+					Variables:   map[string]scenariosv1alpha1.Any{},
+				},
+			},
+		},
 	}
+
+	err := scenariosv1alpha1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
 
 	cfg, err := testEnv.Start()
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
-
-	err = scenariosv1alpha1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:scheme
 
@@ -71,6 +92,26 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 
+	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: scheme.Scheme,
+	})
+	Expect(err).ToNot(HaveOccurred())
+
+	///
+	err = (&ScenarioReconciler{
+		Client: k8sManager.GetClient(),
+		Scheme: k8sManager.GetScheme(),
+		Log:    ctrl.Log.WithName("controllers").WithName("ScenarioReconciler"),
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	go func() {
+		err = k8sManager.Start(ctrl.SetupSignalHandler())
+		Expect(err).ToNot(HaveOccurred())
+	}()
+
+	k8sClient = k8sManager.GetClient()
+	Expect(k8sClient).ToNot(BeNil())
 }, 60)
 
 var _ = AfterSuite(func() {
