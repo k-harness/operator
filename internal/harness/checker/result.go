@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"fmt"
 
-	"sync"
-
 	"github.com/k-harness/operator/api/v1alpha1"
 	"github.com/k-harness/operator/internal/harness/models"
 )
@@ -15,11 +13,11 @@ type ResCheckInterface interface {
 }
 
 type rs struct {
-	store     *sync.Map
+	store     map[string]string
 	condition *v1alpha1.ConditionResponse
 }
 
-func ResCheck(store *sync.Map, condition *v1alpha1.ConditionResponse) ResCheckInterface {
+func ResCheck(store map[string]string, condition *v1alpha1.ConditionResponse) ResCheckInterface {
 	return &rs{
 		store:     store,
 		condition: condition,

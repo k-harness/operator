@@ -4,93 +4,61 @@ import (
 	"context"
 	"fmt"
 
-	"sync"
-	"time"
-
 	"github.com/k-harness/operator/api/v1alpha1"
-	"github.com/k-harness/operator/internal"
 	"github.com/k-harness/operator/internal/harness/checker"
 	"github.com/k-harness/operator/internal/harness/models"
 	"k8s.io/klog/v2"
 )
 
 type scenarioProcessor struct {
-	entity  *v1alpha1.Scenario
-	control internal.Kube
-	store   sync.Map
-	// only complete function is possible to increment current check
-	current int
+	*v1alpha1.Scenario
 }
 
-func newScenarioProcessor(c internal.Kube, item *v1alpha1.Scenario) Processor {
-	//byf := bytes.NewBuffer(nil)
-	//x := json.NewEncoder(byf)
-	//x.SetIndent("","    ")
-	//x.Encode(item)
-	//
-	//fmt.Println()
-	//fmt.Println(byf.String())
-
-	item.Status.Progress = sFmt(0, len(item.Spec.Events))
+func NewScenarioProcessor(item *v1alpha1.Scenario) *scenarioProcessor {
+	item.Status.Of = len(item.Spec.Events)
+	item.Status.Progress = sFmt(item.Status.Step, len(item.Spec.Events))
 	item.Status.State = v1alpha1.Ready
 
-	p := &scenarioProcessor{control: c, entity: item}
+	if item.Status.Variables == nil {
+		item.Status.Variables = make(map[string]string)
+	}
 
 	for k, v := range item.Spec.Variables {
-		p.store.Store(k, v)
+		item.Status.Variables[k] = v
 	}
 
-	return p
+	return &scenarioProcessor{Scenario: item}
 }
 
-// Start ...
-func (s *scenarioProcessor) Start(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-time.After(time.Second):
-			if s.Step(ctx) {
-				return
-			}
-		}
+func (s *scenarioProcessor) Step(ctx context.Context) error {
+	if len(s.Spec.Events) == 0 {
+		return nil
 	}
-}
 
-func (s *scenarioProcessor) Step(ctx context.Context) bool {
-	s.entity.Status.State = v1alpha1.InProgress
-	ev := s.entity.Spec.Events
+	s.Status.State = v1alpha1.InProgress
+	ev := s.Spec.Events
 
 	defer func() {
-		s.entity.Status.Progress = sFmt(s.current, len(ev))
-
-		if err := s.control.Update(s.entity); err != nil {
-			klog.Errorf("scenario processor: %v", err)
-		}
+		s.Status.Progress = sFmt(s.Status.Step, len(ev))
 	}()
 
-	if len(s.entity.Spec.Events) == 0 {
-		return false
+	if err := s.process(ctx, s.Spec.Events[s.Status.Step]); err != nil {
+		s.Status.State = v1alpha1.Failed
+		s.Status.Message = err.Error()
+
+		return fmt.Errorf("process error: %w", err)
 	}
 
-	if err := s.process(ctx, s.entity.Spec.Events[s.current]); err != nil {
-		klog.Errorf("process error: %s", err.Error())
-		s.entity.Status.State = v1alpha1.Failed
-		s.entity.Status.Message = err.Error()
-		// exit on fail
-		return true
+	if s.Status.Of <= s.Status.Step {
+		s.Status.State = v1alpha1.Complete
+		return nil
 	}
 
-	if len(ev) <= s.current {
-		s.entity.Status.State = v1alpha1.Complete
-		return true
-	}
-
-	return false
+	return nil
 }
 
 func (s *scenarioProcessor) process(ctx context.Context, event v1alpha1.Event) error {
-	res, err := s.action(ctx, models.NewAction(event.Action))
+	res, err := s.action(ctx, models.NewAction(event.Name, event.Action))
 	if err != nil {
 		return fmt.Errorf("action %w", err)
 	}
@@ -101,13 +69,13 @@ func (s *scenarioProcessor) process(ctx context.Context, event v1alpha1.Event) e
 func (s *scenarioProcessor) action(ctx context.Context, a *models.Action) (res *ActionResult, err error) {
 	res = OK()
 
-	resp, err := a.GetBody(&s.store)
+	resp, err := a.GetBody(s.Spec.Variables)
 	if err != nil {
 		return nil, err
 	}
 
-	if a.GRPC != nil {
-		res, err = NewGRPC(a).Call(ctx, resp)
+	if a.Connect.GRPC != nil {
+		res, err = NewGRPC(a.Connect.GRPC).Call(ctx, resp)
 		if err != nil {
 			klog.Errorf("scenario progress with action %q grpc call error %v", a.Name, err)
 			// ok=true:  we want to try again
@@ -121,7 +89,7 @@ func (s *scenarioProcessor) action(ctx context.Context, a *models.Action) (res *
 			return nil, fmt.Errorf("binding result key %s err %w", variable, err)
 		}
 
-		s.store.Store(variable, val)
+		s.Status.Variables[variable] = val
 	}
 
 	return res, nil
@@ -130,14 +98,15 @@ func (s *scenarioProcessor) action(ctx context.Context, a *models.Action) (res *
 func (s *scenarioProcessor) checkComplete(c []v1alpha1.Condition, result *ActionResult) error {
 	for _, condition := range c {
 		if condition.Response != nil {
-			if err := checker.ResCheck(&s.store, condition.Response).
+			if err := checker.ResCheck(s.Status.Variables, condition.Response).
 				Is(result.Code, result.Body); err != nil {
 				return err
 			}
 		}
 	}
 
-	s.current++
+	s.Status.Step++
+
 	return nil
 }
 

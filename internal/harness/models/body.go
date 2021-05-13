@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"fmt"
 
+	"text/template"
+
 	"github.com/k-harness/operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/util/json"
-	"sync"
-	"text/template"
 )
 
 func Body(in *v1alpha1.Body) *body {
@@ -23,8 +23,8 @@ func (b *body) Get() ([]byte, error) {
 		return b.Byte, nil
 	}
 
-	if len(b.JSON) > 0 {
-		return []byte(b.JSON), nil
+	if len(b.Row) > 0 {
+		return []byte(b.Row), nil
 	}
 
 	if len(b.KV) == 0 {
@@ -39,17 +39,11 @@ func (b *body) Get() ([]byte, error) {
 	return body, nil
 }
 
-func (b *body) GetBody(store *sync.Map) ([]byte, error) {
+func (b *body) GetBody(store map[string]string) ([]byte, error) {
 	res, err := b.Get()
 	if err != nil {
 		return nil, err
 	}
-
-	sm := make(map[string]interface{})
-	store.Range(func(key, value interface{}) bool {
-		sm[key.(string)] = value
-		return true
-	})
 
 	t, err := template.New("x").Parse(string(res))
 	if err != nil {
@@ -57,7 +51,7 @@ func (b *body) GetBody(store *sync.Map) ([]byte, error) {
 	}
 
 	buf := bytes.NewBuffer(nil)
-	if err = t.Execute(buf, sm); err != nil {
+	if err = t.Execute(buf, store); err != nil {
 		return nil, fmt.Errorf("store template executor: %w", err)
 	}
 

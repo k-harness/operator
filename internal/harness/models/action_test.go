@@ -1,7 +1,6 @@
 package models
 
 import (
-	"sync"
 	"testing"
 
 	"github.com/k-harness/operator/api/v1alpha1"
@@ -11,21 +10,21 @@ import (
 func TestAction_GetBody(t *testing.T) {
 	tests := []struct {
 		name string
-		kv   map[string]interface{}
+		kv   map[string]string
 		body v1alpha1.Body
 		want []byte
 	}{
 		{
 			"OK JSON",
-			map[string]interface{}{"MSG": "HELLO"},
+			map[string]string{"MSG": "HELLO"},
 			v1alpha1.Body{
-				JSON: `{"KEY":"{{.MSG}}"}`,
+				Row: `{"KEY":"{{.MSG}}"}`,
 			},
 			[]byte(`{"KEY":"HELLO"}`),
 		},
 		{
 			"OK BYTE",
-			map[string]interface{}{"MSG": "HELLO"},
+			map[string]string{"MSG": "HELLO"},
 			v1alpha1.Body{
 				Byte: []byte(`{"KEY":"{{.MSG}}"}`),
 			},
@@ -33,23 +32,18 @@ func TestAction_GetBody(t *testing.T) {
 		},
 		{
 			"OK KV",
-			map[string]interface{}{"MSG": "HELLO"},
+			map[string]string{"MSG": "HELLO", "NUM": "123"},
 			v1alpha1.Body{
-				KV: map[string]v1alpha1.Any{"KEY": `{{.MSG}}`},
+				KV: map[string]v1alpha1.Any{"KEY": `{{.MSG}}.{{.NUM}}`},
 			},
-			[]byte(`{"KEY":"HELLO"}`),
+			[]byte(`{"KEY":"HELLO.123"}`),
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			act := NewAction(v1alpha1.Action{Body: test.body})
+			act := NewAction("name", v1alpha1.Action{Request: v1alpha1.Request{Body: test.body}})
 
-			store := sync.Map{}
-			for k, v := range test.kv {
-				store.Store(k, v)
-			}
-
-			res, err := act.GetBody(&store)
+			res, err := act.GetBody(test.kv)
 			assert.NoError(t, err)
 			assert.Equal(t, test.want, res)
 		})

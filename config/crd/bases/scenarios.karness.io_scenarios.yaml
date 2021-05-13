@@ -17,6 +17,14 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - description: Current execution progress
+      jsonPath: .status.message
+      name: Step
+      type: number
+    - description: Total events in queue
+      jsonPath: .status.message
+      name: Of
+      type: number
     - description: Progress of scenario
       jsonPath: .status.progress
       name: Progress
@@ -65,54 +73,73 @@ spec:
                             supposed to be Key: result_key Val: variable name for
                             binding'
                           type: object
-                        body:
+                        connect:
+                          description: Connect transport used by actor
                           properties:
-                            byte:
-                              format: byte
-                              type: string
-                            json:
-                              type: string
-                            kv:
+                            grpc:
+                              properties:
+                                addr:
+                                  description: 'required: true'
+                                  type: string
+                                package:
+                                  description: 'Proto package name required: true'
+                                  type: string
+                                rpc:
+                                  description: rpc command
+                                  type: string
+                                service:
+                                  description: 'required: true'
+                                  type: string
+                              required:
+                              - addr
+                              - package
+                              - rpc
+                              - service
+                              type: object
+                            http:
+                              properties:
+                                addr:
+                                  type: string
+                                method:
+                                  type: string
+                              required:
+                              - addr
+                              - method
+                              type: object
+                          type: object
+                        request:
+                          description: request containment
+                          properties:
+                            body:
+                              properties:
+                                byte:
+                                  format: byte
+                                  type: string
+                                kv:
+                                  additionalProperties:
+                                    type: string
+                                  description: 'ToDo: validate oneOF'
+                                  type: object
+                                row:
+                                  type: string
+                                type:
+                                  enum:
+                                  - json
+                                  - xml
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                            header:
                               additionalProperties:
                                 type: string
                               type: object
-                          type: object
-                        grpc:
-                          properties:
-                            addr:
-                              description: 'required: true'
-                              type: string
-                            package:
-                              description: 'Proto package name required: true'
-                              type: string
-                            rpc:
-                              description: rpc command
-                              type: string
-                            service:
-                              description: 'required: true'
-                              type: string
                           required:
-                          - addr
-                          - package
-                          - rpc
-                          - service
+                          - body
                           type: object
-                        http:
-                          properties:
-                            addr:
-                              type: string
-                            method:
-                              type: string
-                          required:
-                          - addr
-                          - method
-                          type: object
-                        name:
-                          type: string
                       required:
-                      - bind_result
-                      - body
-                      - name
+                      - connect
+                      - request
                       type: object
                     complete:
                       properties:
@@ -128,12 +155,20 @@ spec:
                                       byte:
                                         format: byte
                                         type: string
-                                      json:
-                                        type: string
                                       kv:
                                         additionalProperties:
                                           type: string
+                                        description: 'ToDo: validate oneOF'
                                         type: object
+                                      row:
+                                        type: string
+                                      type:
+                                        enum:
+                                        - json
+                                        - xml
+                                        type: string
+                                    required:
+                                    - type
                                     type: object
                                   status:
                                     type: string
@@ -145,11 +180,10 @@ spec:
                             - response
                             type: object
                           type: array
-                        name:
+                        description:
                           type: string
                       required:
                       - condition
-                      - name
                       type: object
                     description:
                       type: string
@@ -157,8 +191,6 @@ spec:
                       type: string
                   required:
                   - action
-                  - complete
-                  - description
                   - name
                   type: object
                 type: array
@@ -181,6 +213,8 @@ spec:
             properties:
               message:
                 type: string
+              of:
+                type: integer
               progress:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
                   of cluster Important: Run "make" to regenerate code after modifying
@@ -188,10 +222,20 @@ spec:
                 type: string
               state:
                 type: string
+              step:
+                type: integer
+              variables:
+                additionalProperties:
+                  type: string
+                description: storage
+                type: object
             required:
             - message
+            - of
             - progress
             - state
+            - step
+            - variables
             type: object
         type: object
     served: true

@@ -3,16 +3,16 @@ package harness
 import (
 	"context"
 
+	"github.com/k-harness/operator/api/v1alpha1/models/action"
 	"github.com/k-harness/operator/internal/executor/grpcexec"
-	"github.com/k-harness/operator/internal/harness/models"
 )
 
 type grpcAction struct {
-	*models.Action
+	*action.GRPC
 }
 
-func NewGRPC(in *models.Action) ActionInterface {
-	return &grpcAction{Action: in}
+func NewGRPC(in *action.GRPC) ActionInterface {
+	return &grpcAction{GRPC: in}
 }
 
 func (g *grpcAction) Call(ctx context.Context, request []byte) (*ActionResult, error) {

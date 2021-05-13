@@ -42,22 +42,30 @@ type ScenarioSpec struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 
-	Events    []Event        `json:"events"`
-	Variables map[string]Any `json:"variables"`
+	Events    []Event           `json:"events"`
+	Variables map[string]string `json:"variables"`
 }
 
 // ScenarioStatus defines the observed state of Scenario
 type ScenarioStatus struct {
+	Step int `json:"step"`
+	Of   int `json:"of"`
+
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	Progress string `json:"progress"`
 	State    State  `json:"state"`
 	Message  string `json:"message"`
+
+	// storage
+	Variables map[string]string `json:"variables"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //-kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.status.selector
+//+kubebuilder:printcolumn:name="Step",type="number",JSONPath=".status.message",description="Current execution progress"
+//+kubebuilder:printcolumn:name="Of",type="number",JSONPath=".status.message",description="Total events in queue"
 //+kubebuilder:printcolumn:name="Progress",type="string",JSONPath=".status.progress",description="Progress of scenario"
 //+kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.state",description="Status where is current progress"
 //+kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.message",description="Information related to some issues"
@@ -69,6 +77,10 @@ type Scenario struct {
 
 	Spec   ScenarioSpec   `json:"spec,omitempty"`
 	Status ScenarioStatus `json:"status,omitempty"`
+}
+
+func (in *Scenario) IsBeingDeleted() bool {
+	return !in.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
 //+kubebuilder:object:root=true
@@ -83,39 +95,52 @@ type ScenarioList struct {
 //
 type Event struct {
 	Name        string `json:"name"`
-	Description string `json:"description"`
+	Description string `json:"description,omitempty"`
 
 	Action   Action     `json:"action"`
-	Complete Completion `json:"complete"`
+	Complete Completion `json:"complete,omitempty"`
+}
+
+type Request struct {
+	Header map[string]string `json:"header,omitempty"`
+	Body   Body              `json:"body"`
+}
+
+type Body struct {
+	// +kubebuilder:validation:Enum=json;xml
+	Type string `json:"type"`
+
+	// ToDo: validate oneOF
+	KV   map[string]Any `json:"kv,omitempty"`
+	Byte []byte         `json:"byte,omitempty"`
+	Row  string         `json:"row,omitempty"`
+}
+
+type Connect struct {
+	GRPC *action.GRPC `json:"grpc,omitempty"`
+	HTTP *action.HTTP `json:"http,omitempty"`
 }
 
 type Action struct {
-	Name string `json:"name"`
+	// request containment
+	Request Request `json:"request"`
 
-	GRPC *action.GRPC `json:"grpc,omitempty"`
-	HTTP *action.HTTP `json:"http,omitempty"`
-
-	Body Body `json:"body"`
+	// Connect transport used by actor
+	Connect Connect `json:"connect"`
 
 	// BindResult save result KV representation in global variable storage
 	// This works only when result returns as JSON or maybe anything marshalable
 	// Right now only JSON supposed to be
 	// Key: result_key
 	// Val: variable name for binding
-	BindResult map[string]string `json:"bind_result"`
+	BindResult map[string]string `json:"bind_result,omitempty"`
 }
 
 type Any string
 
-type Body struct {
-	KV   map[string]Any `json:"kv,omitempty"`
-	Byte []byte         `json:"byte,omitempty"`
-	JSON string         `json:"json,omitempty"`
-}
-
 type Completion struct {
-	Name      string      `json:"name"`
-	Condition []Condition `json:"condition"`
+	Description string      `json:"description,omitempty"`
+	Condition   []Condition `json:"condition"`
 }
 
 // Condition of complete show reason

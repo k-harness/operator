@@ -21,22 +21,22 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	scenariosv1alpha1 "github.com/k-harness/operator/api/v1alpha1"
 	"github.com/k-harness/operator/internal/harness"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	scenariosv1alpha1 "github.com/k-harness/operator/api/v1alpha1"
 )
 
 // ScenarioReconciler reconciles a Scenario object
 type ScenarioReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
-
-	harness harness.Harness
+	Recorder record.EventRecorder
+	Log      logr.Logger
+	Scheme   *runtime.Scheme
 }
 
 //+kubebuilder:rbac:groups=scenarios.karness.io,resources=scenarios,verbs=get;list;watch;create;update;patch;delete
@@ -56,26 +56,38 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	r.Log.WithValues("scenario", req.NamespacedName, "name", req.Name, "ns", req.Namespace).Info("")
 
 	// your logic here
-	s := &scenariosv1alpha1.Scenario{}
+	item := &scenariosv1alpha1.Scenario{}
 	if err := r.Get(ctx, types.NamespacedName{
 		Namespace: req.Namespace,
 		Name:      req.Name,
-	}, s); err != nil {
+	}, item); err != nil {
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, err
 	}
 
-	//fmt.Printf(">>>>>> %+v", s)
-	if err := r.harness.Factory(ctx, r, req.Name, s); err != nil {
-		r.Log.Error(err, ">>>>>>>")
+	if item.IsBeingDeleted() ||
+		item.Status.State == scenariosv1alpha1.Complete {
+		return ctrl.Result{}, nil
 	}
 
-	return ctrl.Result{}, nil
-}
+	if err := harness.NewScenarioProcessor(item).Step(ctx); err != nil {
+		r.Log.WithValues("obj", item).Error(err, "execution error")
+		r.Recorder.Event(item, corev1.EventTypeWarning, "process", err.Error())
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+	}
 
-func (r *ScenarioReconciler) Update(item *scenariosv1alpha1.Scenario) error {
-	r.Log.WithValues("name", item.Name, "ns", item.Namespace, "XXX", ">>>>>>> UPDATE")
+	r.Recorder.Event(item, corev1.EventTypeNormal, "progress", "ok")
+	r.Log.Info("Complete step", "step", item.Status.Step, "of", item.Status.Of,
+		"variables", item.Status.Variables, "progress", item.Status.Progress,
+		"state", item.Status.State,
+	)
 
-	return r.Client.Update(context.TODO(), item)
+	if err := r.Status().Update(ctx, item, &client.UpdateOptions{}); err != nil {
+		r.Log.WithValues("obj", item).Error(err, "update status")
+		r.Recorder.Event(item, corev1.EventTypeWarning, "update", err.Error())
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+	}
+
+	return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

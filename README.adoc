@@ -12,3 +12,13 @@ On M1 important to launch test via that point
 ----
 GOARCH=amd64 make test
 ----
+
+
+== ToDo
+* [*] reconcile actor execute only 1 operation per reconciliation cycle
+* [*] variables should be part of status
+* [ ] http request headers
+* [ ] grpcurl headers
+* [ ] response mutators. for example: response extracts http url and we need to get only one of parameters
+* [ ] format support: request/response not only json should be user (it could be default value), but XML also required
+* [*] body should have `row` field not `json`, as we could use xml format ether
