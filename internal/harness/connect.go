@@ -32,7 +32,7 @@ func (c *connect) Call(ctx context.Context, body []byte) (*ActionResult, error) 
 	}
 
 	if c.HTTP != nil {
-		res, err := get(c.HTTP)
+		res, err := NewHttpRequest(c.HTTP).Call(ctx, body)
 		if err != nil {
 			return nil, fmt.Errorf("http call: %w", err)
 		}
