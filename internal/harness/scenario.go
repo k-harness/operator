@@ -7,7 +7,6 @@ import (
 	"github.com/k-harness/operator/api/v1alpha1"
 	"github.com/k-harness/operator/internal/harness/checker"
 	"github.com/k-harness/operator/internal/harness/models"
-	"k8s.io/klog/v2"
 )
 
 type scenarioProcessor struct {
@@ -46,8 +45,10 @@ func (s *scenarioProcessor) Step(ctx context.Context) error {
 		s.Status.State = v1alpha1.Failed
 		s.Status.Message = err.Error()
 
-		return fmt.Errorf("process error: %w", err)
+		return err
 	}
+
+	s.Status.Step++
 
 	if s.Status.Of <= s.Status.Step {
 		s.Status.State = v1alpha1.Complete
@@ -60,36 +61,37 @@ func (s *scenarioProcessor) Step(ctx context.Context) error {
 func (s *scenarioProcessor) process(ctx context.Context, event v1alpha1.Event) error {
 	res, err := s.action(ctx, models.NewAction(event.Name, event.Action))
 	if err != nil {
-		return fmt.Errorf("action %w", err)
+		return err
 	}
 
-	return s.checkComplete(event.Complete.Condition, res)
+	if err = s.checkComplete(event.Complete.Condition, res); err != nil {
+		return fmt.Errorf("check completion: %w", err)
+	}
+
+	// only if completion is OK we're able to bind action
+	for variable, jpath := range event.Action.BindResult {
+		val, err := res.GetKeyValue(jpath)
+		if err != nil {
+			return fmt.Errorf("binding result key %s err %w", variable, err)
+		}
+
+		s.Status.Variables[variable] = val
+	}
+
+	return nil
 }
 
 func (s *scenarioProcessor) action(ctx context.Context, a *models.Action) (res *ActionResult, err error) {
 	res = OK()
 
-	resp, err := a.GetBody(s.Spec.Variables)
+	body, err := a.GetBody(s.Spec.Variables)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("action can't exstract body: %w", err)
 	}
 
-	if a.Connect.GRPC != nil {
-		res, err = NewGRPC(a.Connect.GRPC).Call(ctx, resp)
-		if err != nil {
-			klog.Errorf("scenario progress with action %q grpc call error %v", a.Name, err)
-			// ok=true:  we want to try again
-			return nil, err
-		}
-	}
-
-	for variable, jpath := range a.BindResult {
-		val, err := res.GetKeyValue(jpath)
-		if err != nil {
-			return nil, fmt.Errorf("binding result key %s err %w", variable, err)
-		}
-
-		s.Status.Variables[variable] = val
+	c := connect{&a.Connect}
+	if res, err = c.Call(ctx, body); err != nil {
+		return nil, fmt.Errorf("connection call error: %w", err)
 	}
 
 	return res, nil
@@ -104,8 +106,6 @@ func (s *scenarioProcessor) checkComplete(c []v1alpha1.Condition, result *Action
 			}
 		}
 	}
-
-	s.Status.Step++
 
 	return nil
 }

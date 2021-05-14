@@ -2,6 +2,7 @@ package grpcexec
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 
@@ -30,7 +31,7 @@ func (s MockServer) SayHello(_ context.Context, req *helloworld.HelloRequest) (*
 func CreateMockServer(fx Fixture) (net.Listener, *grpc.Server) {
 	l, err := net.Listen("tcp", ":0")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("listen server error: %w", err))
 	}
 
 	s := grpc.NewServer()

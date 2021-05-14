@@ -21,7 +21,7 @@ const (
 	interval = time.Millisecond * 250
 )
 
-var _ = Context("When scenario created", func() {
+var _ = Context("empty scenario", func() {
 	ctx := context.Background()
 
 	key := types.NamespacedName{Name: name, Namespace: ns}
@@ -35,7 +35,6 @@ var _ = Context("When scenario created", func() {
 			Name:        "123",
 			Description: "dx",
 			Events:      []scenariosv1alpha1.Event{},
-			Variables:   map[string]string{},
 		},
 	}
 

@@ -7,15 +7,15 @@ import (
 	"github.com/k-harness/operator/internal/executor/grpcexec"
 )
 
-type grpcAction struct {
+type grpcRequest struct {
 	*action.GRPC
 }
 
-func NewGRPC(in *action.GRPC) ActionInterface {
-	return &grpcAction{GRPC: in}
+func NewGRPCRequest(in *action.GRPC) RequestInterface {
+	return &grpcRequest{GRPC: in}
 }
 
-func (g *grpcAction) Call(ctx context.Context, request []byte) (*ActionResult, error) {
+func (g *grpcRequest) Call(ctx context.Context, request []byte) (*ActionResult, error) {
 	gc := grpcexec.New()
 
 	code, body, err := gc.Call(ctx, g.GRPC.Addr, grpcexec.Path{

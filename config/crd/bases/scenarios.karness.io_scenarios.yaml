@@ -102,6 +102,10 @@ spec:
                                   type: string
                                 method:
                                   type: string
+                                path:
+                                  type: string
+                                query:
+                                  type: string
                               required:
                               - addr
                               - method

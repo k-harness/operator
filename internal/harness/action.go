@@ -10,7 +10,7 @@ import (
 	"k8s.io/client-go/util/jsonpath"
 )
 
-type ActionInterface interface {
+type RequestInterface interface {
 	Call(ctx context.Context, body []byte) (*ActionResult, error)
 }
 
@@ -31,6 +31,10 @@ func OK() *ActionResult {
 // GetKeyValue look up key in our json representation
 // every time perform JSON marshaling. This is too slow!!!
 func (a *ActionResult) GetKeyValue(jsonPath string) (string, error) {
+	if a.Body == nil {
+		return "", fmt.Errorf("body is nil")
+	}
+
 	var tmp interface{}
 	if err := json.Unmarshal(a.Body, &tmp); err != nil {
 		return "", fmt.Errorf("can't unmarshal body: %w", err)
@@ -50,6 +54,5 @@ func (a *ActionResult) GetKeyValue(jsonPath string) (string, error) {
 		return "", ErrBadJsonPath
 	}
 
-	fmt.Println(">>>", buf.String())
 	return buf.String(), nil
 }

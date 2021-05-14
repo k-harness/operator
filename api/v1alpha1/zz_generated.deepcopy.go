@@ -145,7 +145,7 @@ func (in *Connect) DeepCopyInto(out *Connect) {
 	if in.HTTP != nil {
 		in, out := &in.HTTP, &out.HTTP
 		*out = new(action.HTTP)
-		**out = **in
+		(*in).DeepCopyInto(*out)
 	}
 }
 

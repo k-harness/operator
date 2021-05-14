@@ -36,6 +36,10 @@ func (r *rs) Is(status string, resBody []byte) error {
 		return fmt.Errorf("get condition body %w", err)
 	}
 
+	if body == nil {
+		return nil
+	}
+
 	if bytes.Equal(body, resBody) {
 		return nil
 	}
