@@ -18,13 +18,13 @@ spec:
   versions:
   - additionalPrinterColumns:
     - description: Current execution progress
-      jsonPath: .status.message
+      jsonPath: .status.step
       name: Step
-      type: number
+      type: integer
     - description: Total events in queue
-      jsonPath: .status.message
+      jsonPath: .status.of
       name: Of
-      type: number
+      type: integer
     - description: Progress of scenario
       jsonPath: .status.progress
       name: Progress

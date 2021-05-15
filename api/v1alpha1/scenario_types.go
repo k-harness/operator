@@ -64,8 +64,8 @@ type ScenarioStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //-kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.status.selector
-//+kubebuilder:printcolumn:name="Step",type="number",JSONPath=".status.message",description="Current execution progress"
-//+kubebuilder:printcolumn:name="Of",type="number",JSONPath=".status.message",description="Total events in queue"
+//+kubebuilder:printcolumn:name="Step",type="integer",JSONPath=".status.step",description="Current execution progress"
+//+kubebuilder:printcolumn:name="Of",type="integer",JSONPath=".status.of",description="Total events in queue"
 //+kubebuilder:printcolumn:name="Progress",type="string",JSONPath=".status.progress",description="Progress of scenario"
 //+kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.state",description="Status where is current progress"
 //+kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.message",description="Information related to some issues"
