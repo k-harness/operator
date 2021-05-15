@@ -26,10 +26,6 @@ type Action struct {
 	vars map[string]string
 }
 
-func OK() *ActionResult {
-	return &ActionResult{Code: "OK"}
-}
-
 func NewAction(name string, a v1alpha1.Action, variables map[string]string) *Action {
 	return &Action{Name: name, Action: a, vars: variables}
 }

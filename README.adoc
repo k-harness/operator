@@ -56,6 +56,11 @@ First function, no arg required, so u can simle can generate uuid string
 
 Example: `{{ uuid }}`
 
+.rnd_str ::len
+Generate random string with specific len
+
+Example: `{{ rnd_str 32 }}`
+
 == ToDo
 * [*] reconcile actor execute only 1 operation per reconciliation cycle
 * [*] variables should be part of status

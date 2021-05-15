@@ -9,11 +9,15 @@ import (
 	"github.com/google/uuid"
 	"github.com/k-harness/operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/util/json"
+	"k8s.io/apimachinery/pkg/util/rand"
 )
 
 var TemplateFunctions = template.FuncMap{
 	"uuid": func() string {
 		return uuid.New().String()
+	},
+	"rnd_str": func(len int) string {
+		return rand.String(len)
 	},
 }
 

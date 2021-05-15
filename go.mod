@@ -5,7 +5,6 @@ go 1.15
 require (
 	github.com/Azure/go-autorest/autorest v0.11.18 // indirect
 	github.com/fullstorydev/grpcurl v1.8.1
-	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v0.3.0
 	github.com/google/uuid v1.1.2
 	github.com/jhump/protoreflect v1.8.2

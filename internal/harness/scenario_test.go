@@ -44,7 +44,7 @@ var _ = Describe("scenario coverage", func() {
 					},
 					Body: v1alpha1.Body{
 						Type: "json", // under hood clien send context-type application/json
-						Row:  `{"id": "{{ uuid }}", "client": "{{.CLIENT_ID}}"}`,
+						Row:  `{"id": "{{ uuid }}", "client": "{{.CLIENT_ID}}", "rnd_str": "{{ rnd_str 32 }}"}`,
 					},
 				},
 				Connect: v1alpha1.Connect{
@@ -99,6 +99,10 @@ var _ = Describe("scenario coverage", func() {
 			By("expect server got body with id value which is uuid function")
 			Expect(fx.RequestAccepted.BodyMap).Should(HaveKey("id"))
 			Expect(fx.RequestAccepted.BodyMap["id"]).To(HaveLen(36))
+
+			By("check function rnd_str with 32 len")
+			Expect(fx.RequestAccepted.BodyMap).Should(HaveKey("rnd_str"))
+			Expect(fx.RequestAccepted.BodyMap["rnd_str"]).To(HaveLen(32))
 
 			By("expecting token appears in variables store")
 			Expect(item.Status.Variables).Should(ConsistOf(token, "123"))
