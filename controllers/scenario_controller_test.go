@@ -13,11 +13,10 @@ import (
 
 // https://book.kubebuilder.io/cronjob-tutorial/writing-tests.html
 const (
-	name = "test-cronjob"
+	name = "test-scenario"
 	ns   = "default"
 
 	timeout  = time.Second * 10
-	duration = time.Second * 10
 	interval = time.Millisecond * 250
 )
 

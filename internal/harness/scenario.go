@@ -58,9 +58,10 @@ func (s *scenarioProcessor) Step(ctx context.Context) error {
 }
 
 func (s *scenarioProcessor) process(ctx context.Context, event v1alpha1.Event) error {
-	res, err := s.action(ctx, NewAction(event.Name, event.Action, s.Status.Variables))
+	action := NewAction(event.Name, event.Action, s.Status.Variables)
+	res, err := action.Call(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("connection call error: %w", err)
 	}
 
 	if err = s.checkComplete(event.Complete.Condition, res); err != nil {
@@ -78,16 +79,6 @@ func (s *scenarioProcessor) process(ctx context.Context, event v1alpha1.Event) e
 	}
 
 	return nil
-}
-
-func (s *scenarioProcessor) action(ctx context.Context, a *Action) (res *ActionResult, err error) {
-	res = OK()
-
-	if res, err = a.Call(ctx); err != nil {
-		return nil, fmt.Errorf("connection call error: %w", err)
-	}
-
-	return res, nil
 }
 
 func (s *scenarioProcessor) checkComplete(c []v1alpha1.Condition, result *ActionResult) error {

@@ -13,13 +13,55 @@ On M1 important to launch test via that point
 GOARCH=amd64 make test
 ----
 
+= spec
+== spec.variables
+
+Initial pollution of environment storage. Used to populate via `gotempalte`  body request or completition checks.
+
+== spec.events
+Step representation. Only one step should be called at the time. It describes what action is required at that moment and how check that that action was meat our completion goal
+
+=== spec.events[].action
+Request and connection flow + binding operation to our status variables storage
+
+==== spec.events[].action.request
+ToDo
+
+==== spec.events[].action.connect
+ToDo
+
+==== spec.events[].action.bind_result
+key-value opject, where key - is future variable key, value - should be `jsonpath` pattern which extracts desired value
+
+example: `BALANCE: "{.playerdetailresponse.balance}"`
+
+
+== Technologies
+
+=== jsonpath
+used to exstract result from send grpc/http request and put in to variable store
+
+=== golang templates
+Prepare body to send request via `variables` store and `functions`
+
+==== variables
+Main feature the same as variable in your system, you just fill placeholerd with useful information which gives you possibility to make more intractable data
+
+
+==== functions
+Some function called inside template which more flexible then only variable as we can use power of generator, for example
+
+.uuid
+First function, no arg required, so u can simle can generate uuid string
+
+Example: `{{ uuid }}`
 
 == ToDo
 * [*] reconcile actor execute only 1 operation per reconciliation cycle
 * [*] variables should be part of status
 * [*] http request headers
 * [*] grpcurl headers
-* [ ] boyd functions: uuid generator at least
+* [*] body functions: uuid generator at least
 * [ ] response mutators. for example: response extracts http url and we need to get only one of parameters
 * [ ] format support: request/response not only json should be user (it could be default value), but XML also required
 * [*] body should have `row` field not `json`, as we could use xml format ether

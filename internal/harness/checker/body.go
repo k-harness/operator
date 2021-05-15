@@ -6,9 +6,16 @@ import (
 
 	"text/template"
 
+	"github.com/google/uuid"
 	"github.com/k-harness/operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/util/json"
 )
+
+var TemplateFunctions = template.FuncMap{
+	"uuid": func() string {
+		return uuid.New().String()
+	},
+}
 
 func Body(in *v1alpha1.Body) *body {
 	return &body{Body: in}
@@ -45,7 +52,9 @@ func (b *body) GetBody(store map[string]string) ([]byte, error) {
 		return nil, err
 	}
 
-	t, err := template.New("x").Parse(string(res))
+	t, err := template.New("x").
+		Funcs(TemplateFunctions).
+		Parse(string(res))
 	if err != nil {
 		return nil, fmt.Errorf("template parse error: %w", err)
 	}
