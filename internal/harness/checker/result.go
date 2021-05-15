@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/k-harness/operator/api/v1alpha1"
-	"github.com/k-harness/operator/internal/harness/models"
 )
 
 type ResCheckInterface interface {
@@ -31,7 +30,7 @@ func (r *rs) Is(status string, resBody []byte) error {
 		}
 	}
 
-	body, err := models.Body(&r.condition.Body).GetBody(r.store)
+	body, err := Body(&r.condition.Body).GetBody(r.store)
 	if err != nil {
 		return fmt.Errorf("get condition body %w", err)
 	}

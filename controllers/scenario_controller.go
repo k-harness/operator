@@ -70,7 +70,8 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	if err := harness.NewScenarioProcessor(item).Step(ctx); err != nil {
-		r.Log.WithValues("obj", item).Error(err, "execution error")
+		r.Log.Error(err, "scenario process",
+			"status", item.Status, "meta", item.TypeMeta, "obg-meta", item.ObjectMeta)
 		r.Recorder.Event(item, corev1.EventTypeWarning, "process", err.Error())
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	}
@@ -81,8 +82,13 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		"state", item.Status.State,
 	)
 
-	if err := r.Status().Update(ctx, item, &client.UpdateOptions{}); err != nil {
-		r.Log.WithValues("obj", item).Error(err, "update status")
+	// ToDo: crd:v1beta1 and v1 has different flow for saving
+	// for v1beta1 we should call r.Update method
+	// there as for v1 we should call special method r.Status().Update
+	if err := r.Status().Update(ctx, item.DeepCopy()); err != nil {
+		r.Log.Error(err, "status update error",
+			"status", item.Status, "meta", item.TypeMeta, "obg-meta", item.ObjectMeta)
+
 		r.Recorder.Event(item, corev1.EventTypeWarning, "update", err.Error())
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	}

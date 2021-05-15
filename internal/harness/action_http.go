@@ -10,6 +10,7 @@ import (
 	"path"
 
 	"github.com/k-harness/operator/api/v1alpha1/models/action"
+	"github.com/k-harness/operator/internal/executor"
 )
 
 type httpRequest struct {
@@ -20,7 +21,7 @@ func NewHttpRequest(in *action.HTTP) RequestInterface {
 	return &httpRequest{HTTP: in}
 }
 
-func (in *httpRequest) Call(ctx context.Context, request []byte) (*ActionResult, error) {
+func (in *httpRequest) Call(ctx context.Context, request executor.Request) (*ActionResult, error) {
 	uri, err := url.Parse(in.Addr)
 	if err != nil {
 		return nil, fmt.Errorf("bad http address: %w", err)
@@ -34,9 +35,17 @@ func (in *httpRequest) Call(ctx context.Context, request []byte) (*ActionResult,
 		uri.RawQuery = *in.Query
 	}
 
-	req, err := http.NewRequest(in.Method, uri.String(), bytes.NewBuffer(request))
+	req, err := http.NewRequest(in.Method, uri.String(), bytes.NewBuffer(request.Body))
 	if err != nil {
 		return nil, fmt.Errorf("http init request %q erorr :%w", uri.String(), err)
+	}
+
+	for key, val := range request.Header {
+		req.Header.Add(key, val)
+	}
+
+	if request.Type == "json" {
+		req.Header.Add("content-type", "application/json")
 	}
 
 	hResp, err := http.DefaultClient.Do(req)

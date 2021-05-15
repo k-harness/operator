@@ -17,8 +17,10 @@ GOARCH=amd64 make test
 == ToDo
 * [*] reconcile actor execute only 1 operation per reconciliation cycle
 * [*] variables should be part of status
-* [ ] http request headers
-* [ ] grpcurl headers
+* [*] http request headers
+* [*] grpcurl headers
+* [ ] boyd functions: uuid generator at least
 * [ ] response mutators. for example: response extracts http url and we need to get only one of parameters
 * [ ] format support: request/response not only json should be user (it could be default value), but XML also required
 * [*] body should have `row` field not `json`, as we could use xml format ether
+* [ ] infinite or repeated actions which should finish due to some condition

@@ -73,7 +73,7 @@ func New(opt ...Option) *service {
 // Call ...
 // @symbol: {package}.{service}/{rpc}
 // @request - json with request
-func (g *service) Call(ctx context.Context, addr string, symbol Path, request []byte) (codes.Code, []byte, error) {
+func (g *service) Call(ctx context.Context, addr string, symbol Path, request []byte, headers []string) (codes.Code, []byte, error) {
 	cc, err := g.dial(ctx, addr)
 	if err != nil {
 		return 0, nil, fmt.Errorf("call error: %w", err)
@@ -116,7 +116,7 @@ func (g *service) Call(ctx context.Context, addr string, symbol Path, request []
 		VerbosityLevel: g.verbosityLevel,
 	}
 
-	err = grpcurl.InvokeRPC(ctx, descSource, cc, symbol.String(), nil, h, rf.Next)
+	err = grpcurl.InvokeRPC(ctx, descSource, cc, symbol.String(), headers, h, rf.Next)
 
 	if err != nil {
 		if errStatus, ok := status.FromError(err); ok && g.formatError {

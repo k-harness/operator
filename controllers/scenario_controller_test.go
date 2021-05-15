@@ -35,6 +35,7 @@ var _ = Context("empty scenario", func() {
 			Name:        "123",
 			Description: "dx",
 			Events:      []scenariosv1alpha1.Event{},
+			Variables:   map[string]string{},
 		},
 	}
 

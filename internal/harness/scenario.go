@@ -6,7 +6,6 @@ import (
 
 	"github.com/k-harness/operator/api/v1alpha1"
 	"github.com/k-harness/operator/internal/harness/checker"
-	"github.com/k-harness/operator/internal/harness/models"
 )
 
 type scenarioProcessor struct {
@@ -59,7 +58,7 @@ func (s *scenarioProcessor) Step(ctx context.Context) error {
 }
 
 func (s *scenarioProcessor) process(ctx context.Context, event v1alpha1.Event) error {
-	res, err := s.action(ctx, models.NewAction(event.Name, event.Action))
+	res, err := s.action(ctx, NewAction(event.Name, event.Action, s.Status.Variables))
 	if err != nil {
 		return err
 	}
@@ -81,16 +80,10 @@ func (s *scenarioProcessor) process(ctx context.Context, event v1alpha1.Event) e
 	return nil
 }
 
-func (s *scenarioProcessor) action(ctx context.Context, a *models.Action) (res *ActionResult, err error) {
+func (s *scenarioProcessor) action(ctx context.Context, a *Action) (res *ActionResult, err error) {
 	res = OK()
 
-	body, err := a.GetBody(s.Spec.Variables)
-	if err != nil {
-		return nil, fmt.Errorf("action can't exstract body: %w", err)
-	}
-
-	c := connect{&a.Connect}
-	if res, err = c.Call(ctx, body); err != nil {
+	if res, err = a.Call(ctx); err != nil {
 		return nil, fmt.Errorf("connection call error: %w", err)
 	}
 
