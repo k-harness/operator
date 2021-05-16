@@ -35,6 +35,9 @@ key-value opject, where key - is future variable key, value - should be `jsonpat
 
 example: `BALANCE: "{.playerdetailresponse.balance}"`
 
+=== spec.events[].completion
+==== spec.events[].completion.repeat
+tell how many times we should repeat current flow for switch to next event
 
 == Technologies
 
@@ -70,4 +73,4 @@ Example: `{{ rnd_str 32 }}`
 * [ ] response mutators. for example: response extracts http url and we need to get only one of parameters
 * [ ] format support: request/response not only json should be user (it could be default value), but XML also required
 * [*] body should have `row` field not `json`, as we could use xml format ether
-* [ ] infinite or repeated actions which should finish due to some condition
+* [*] infinite or repeated actions which should finish due to some condition

@@ -25,6 +25,10 @@ spec:
       jsonPath: .status.of
       name: Of
       type: integer
+    - description: Repeat number
+      jsonPath: .status.repeat
+      name: Repeat
+      type: integer
     - description: Progress of scenario
       jsonPath: .status.progress
       name: Progress
@@ -186,6 +190,10 @@ spec:
                           type: array
                         description:
                           type: string
+                        repeat:
+                          description: Repeat current item times
+                          minimum: 1
+                          type: integer
                       required:
                       - condition
                       type: object
@@ -218,15 +226,20 @@ spec:
               message:
                 type: string
               of:
+                description: Of total events in scenario list
                 type: integer
               progress:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
                   of cluster Important: Run "make" to regenerate code after modifying
                   this file'
                 type: string
+              repeat:
+                description: Count of repeat current state
+                type: integer
               state:
                 type: string
               step:
+                description: Step current scenario in progress
                 type: integer
               variables:
                 additionalProperties:
@@ -237,6 +250,7 @@ spec:
             - message
             - of
             - progress
+            - repeat
             - state
             - step
             - variables

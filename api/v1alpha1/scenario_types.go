@@ -48,8 +48,14 @@ type ScenarioSpec struct {
 
 // ScenarioStatus defines the observed state of Scenario
 type ScenarioStatus struct {
+	// Step current scenario in progress
 	Step int `json:"step"`
-	Of   int `json:"of"`
+
+	// Of total events in scenario list
+	Of int `json:"of"`
+
+	// Count of repeat current state
+	Repeat int `json:"repeat"`
 
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
@@ -66,6 +72,7 @@ type ScenarioStatus struct {
 //-kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.status.selector
 //+kubebuilder:printcolumn:name="Step",type="integer",JSONPath=".status.step",description="Current execution progress"
 //+kubebuilder:printcolumn:name="Of",type="integer",JSONPath=".status.of",description="Total events in queue"
+//+kubebuilder:printcolumn:name="Repeat",type="integer",JSONPath=".status.repeat",description="Repeat number"
 //+kubebuilder:printcolumn:name="Progress",type="string",JSONPath=".status.progress",description="Progress of scenario"
 //+kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.state",description="Status where is current progress"
 //+kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.message",description="Information related to some issues"
@@ -139,8 +146,13 @@ type Action struct {
 type Any string
 
 type Completion struct {
-	Description string      `json:"description,omitempty"`
-	Condition   []Condition `json:"condition"`
+	Description string `json:"description,omitempty"`
+
+	// Repeat current item times
+	// +kubebuilder:validation:Minimum=1
+	Repeat int `json:"repeat,omitempty"`
+
+	Condition []Condition `json:"condition"`
 }
 
 // Condition of complete show reason

@@ -2,6 +2,7 @@ package harness
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/k-harness/operator/api/v1alpha1"
@@ -47,8 +48,6 @@ func (s *scenarioProcessor) Step(ctx context.Context) error {
 		return err
 	}
 
-	s.Status.Step++
-
 	if s.Status.Of <= s.Status.Step {
 		s.Status.State = v1alpha1.Complete
 		return nil
@@ -60,11 +59,15 @@ func (s *scenarioProcessor) Step(ctx context.Context) error {
 func (s *scenarioProcessor) process(ctx context.Context, event v1alpha1.Event) error {
 	action := NewAction(event.Name, event.Action, s.Status.Variables)
 	res, err := action.Call(ctx)
-	if err != nil {
+	switch {
+	case err == nil:
+		// if condition completion is empty, we can ignore that?
+	case errors.Is(err, ErrNoConnectionData) && len(event.Complete.Condition) == 0:
+	default:
 		return fmt.Errorf("connection call error: %w", err)
 	}
 
-	if err = s.checkComplete(event.Complete.Condition, res); err != nil {
+	if err = s.checkComplete(event.Complete, res); err != nil {
 		return fmt.Errorf("check completion: %w", err)
 	}
 
@@ -81,8 +84,8 @@ func (s *scenarioProcessor) process(ctx context.Context, event v1alpha1.Event) e
 	return nil
 }
 
-func (s *scenarioProcessor) checkComplete(c []v1alpha1.Condition, result *ActionResult) error {
-	for _, condition := range c {
+func (s *scenarioProcessor) checkComplete(c v1alpha1.Completion, result *ActionResult) error {
+	for _, condition := range c.Condition {
 		if condition.Response != nil {
 			if err := checker.ResCheck(s.Status.Variables, condition.Response).
 				Is(result.Code, result.Body); err != nil {
@@ -90,6 +93,14 @@ func (s *scenarioProcessor) checkComplete(c []v1alpha1.Condition, result *Action
 			}
 		}
 	}
+
+	s.Status.Repeat++
+	if c.Repeat > 1 && c.Repeat > s.Status.Repeat {
+		return nil
+	}
+
+	s.Status.Step++
+	s.Status.Repeat = 0
 
 	return nil
 }

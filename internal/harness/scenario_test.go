@@ -17,6 +17,46 @@ import (
 )
 
 var _ = Describe("scenario coverage", func() {
+	_ = Context("event with 2 events. 1 repeat == 2, second = 1", func() {
+		It("in should increase status.step only after exceed repeat counter", func() {
+			By("prepare simple asset with repeat completion")
+
+			item := &v1alpha1.Scenario{Spec: v1alpha1.ScenarioSpec{
+				Events: []v1alpha1.Event{
+					{Complete: v1alpha1.Completion{Repeat: 2}},
+					{Complete: v1alpha1.Completion{Repeat: 1}},
+				},
+			}}
+
+			By("creating processor")
+			processor := harness.NewScenarioProcessor(item)
+			Expect(processor).ShouldNot(BeNil())
+
+			By("run 1 step call")
+			Expect(processor.Step(context.Background())).ShouldNot(HaveOccurred())
+
+			By("still should be in 0 stage", func() {
+				Expect(item.Status.Step).Should(Equal(0))
+			})
+
+			By("run 2 step call")
+			Expect(processor.Step(context.Background())).ShouldNot(HaveOccurred())
+
+			By("should shift to next stage", func() {
+				Expect(item.Status.Step).Should(Equal(1))
+
+				By("reseting repeat status counter")
+				Expect(item.Status.Repeat).Should(Equal(0))
+			})
+
+			By("run 3 step call")
+			Expect(processor.Step(context.Background())).ShouldNot(HaveOccurred())
+
+			By("it should finish all steps")
+			Expect(item.Status.State).Should(Equal(v1alpha1.Complete))
+		})
+	})
+
 	_ = Context("http call with evn and binding", func() {
 		It("should send http and save bind request to status variables store", func() {
 			token := uuid.New().String()
@@ -83,6 +123,9 @@ var _ = Describe("scenario coverage", func() {
 			By("run step")
 			err = processor.Step(context.Background())
 			Expect(err).ShouldNot(HaveOccurred())
+
+			By("expect step will increased")
+			Expect(item.Status.Step).Should(Equal(1))
 
 			By("expect mock server took correct header what was described in request headers")
 			Expect(fx.RequestAccepted.Headers).Should(
