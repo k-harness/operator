@@ -12,6 +12,12 @@ On M1 important to launch test via that point
 ----
 GOARCH=amd64 make test
 ----
+== CRD v1beta1 support
+1. `make build-v1beta1`
+2. edit crd_v1beta1.yaml
+ a. rename v1 => v1beta1 CustomResourceDefinition's apiVersion
+ b. rename jsonPath => JSONPath in spec.versions[].additionalPrinterColumns
+ c. add new version to  `versions` slice because it's required k8s at least in 1.15 version
 
 = spec
 == spec.variables

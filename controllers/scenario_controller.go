@@ -80,6 +80,7 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	r.Log.Info("Complete step", "step", item.Status.Step, "of", item.Status.Of,
 		"variables", item.Status.Variables, "progress", item.Status.Progress,
 		"state", item.Status.State,
+		"repeat", item.Status.Repeat,
 	)
 
 	// ToDo: crd:v1beta1 and v1 has different flow for saving
