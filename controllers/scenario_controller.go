@@ -22,7 +22,8 @@ import (
 
 	"github.com/go-logr/logr"
 	scenariosv1alpha1 "github.com/k-harness/operator/api/v1alpha1"
-	"github.com/k-harness/operator/internal/harness"
+	harness2 "github.com/k-harness/operator/pkg/harness"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -69,7 +70,7 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 
-	if err := harness.NewScenarioProcessor(item).Step(ctx); err != nil {
+	if err := harness2.NewScenarioProcessor(item).Step(ctx); err != nil {
 		r.Log.Error(err, "scenario process",
 			"status", item.Status, "meta", item.TypeMeta, "obg-meta", item.ObjectMeta)
 		r.Recorder.Event(item, corev1.EventTypeWarning, "process", err.Error())

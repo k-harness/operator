@@ -10,7 +10,7 @@ import (
 	"path"
 
 	"github.com/k-harness/operator/api/v1alpha1/models/action"
-	"github.com/k-harness/operator/internal/executor"
+	executor2 "github.com/k-harness/operator/pkg/executor"
 )
 
 type httpRequest struct {
@@ -21,7 +21,7 @@ func NewHttpRequest(in *action.HTTP) RequestInterface {
 	return &httpRequest{HTTP: in}
 }
 
-func (in *httpRequest) Call(ctx context.Context, request executor.Request) (*ActionResult, error) {
+func (in *httpRequest) Call(ctx context.Context, request executor2.Request) (*ActionResult, error) {
 	uri, err := url.Parse(in.Addr)
 	if err != nil {
 		return nil, fmt.Errorf("bad http address: %w", err)

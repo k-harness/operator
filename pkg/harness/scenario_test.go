@@ -8,9 +8,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/k-harness/operator/api/v1alpha1"
 	"github.com/k-harness/operator/api/v1alpha1/models/action"
-	"github.com/k-harness/operator/internal/executor/grpcexec"
-	"github.com/k-harness/operator/internal/executor/httpexec"
-	"github.com/k-harness/operator/internal/harness"
+	grpcexec2 "github.com/k-harness/operator/pkg/executor/grpcexec"
+	httpexec2 "github.com/k-harness/operator/pkg/executor/httpexec"
+	harness2 "github.com/k-harness/operator/pkg/harness"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	pb "google.golang.org/grpc/examples/helloworld/helloworld"
@@ -29,7 +29,7 @@ var _ = Describe("scenario coverage", func() {
 			}}
 
 			By("creating processor")
-			processor := harness.NewScenarioProcessor(item)
+			processor := harness2.NewScenarioProcessor(item)
 			Expect(processor).ShouldNot(BeNil())
 
 			By("run 1 step call")
@@ -61,13 +61,13 @@ var _ = Describe("scenario coverage", func() {
 		It("should send http and save bind request to status variables store", func() {
 			token := uuid.New().String()
 
-			fx := &httpexec.Fixture{
+			fx := &httpexec2.Fixture{
 				Res:    map[string]string{"token": token},
 				Status: http.StatusOK,
 			}
 
 			By("prepare http mock server which send token in message")
-			l, srv, err := httpexec.CreateMockServer(fx)
+			l, srv, err := httpexec2.CreateMockServer(fx)
 
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -117,7 +117,7 @@ var _ = Describe("scenario coverage", func() {
 			}}
 
 			By("creating processor")
-			processor := harness.NewScenarioProcessor(item)
+			processor := harness2.NewScenarioProcessor(item)
 			Expect(processor).ShouldNot(BeNil())
 
 			By("run step")
@@ -156,12 +156,12 @@ var _ = Describe("scenario coverage", func() {
 		It("should send grpc and save bind request to status variables store", func() {
 			By("prepare grpc mock server which send token in message")
 			token := uuid.New().String()
-			fx := grpcexec.Fixture{
+			fx := grpcexec2.Fixture{
 				Res: &pb.HelloReply{Message: token},
 				CB:  func(request *pb.HelloRequest) {},
 			}
 
-			l, srv := grpcexec.CreateMockServer(fx)
+			l, srv := grpcexec2.CreateMockServer(fx)
 			defer func() {
 				srv.Stop()
 				_ = l.Close()
@@ -200,7 +200,7 @@ var _ = Describe("scenario coverage", func() {
 			}}
 
 			By("creating processor")
-			processor := harness.NewScenarioProcessor(item)
+			processor := harness2.NewScenarioProcessor(item)
 			Expect(processor).ShouldNot(BeNil())
 
 			By("run step")

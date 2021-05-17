@@ -6,14 +6,14 @@ import (
 	"fmt"
 
 	"github.com/k-harness/operator/api/v1alpha1"
-	"github.com/k-harness/operator/internal/executor"
+	executor2 "github.com/k-harness/operator/pkg/executor"
 )
 
 var (
 	ErrNoConnectionData = errors.New("no connection data")
 )
 
-func Call(ctx context.Context, c v1alpha1.Connect, r executor.Request) (*ActionResult, error) {
+func Call(ctx context.Context, c v1alpha1.Connect, r executor2.Request) (*ActionResult, error) {
 	if c.GRPC != nil {
 		res, err := NewGRPCRequest(c.GRPC).Call(ctx, r)
 		if err != nil {

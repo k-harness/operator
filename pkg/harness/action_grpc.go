@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/k-harness/operator/api/v1alpha1/models/action"
-	"github.com/k-harness/operator/internal/executor"
-	"github.com/k-harness/operator/internal/executor/grpcexec"
+	executor2 "github.com/k-harness/operator/pkg/executor"
+	grpcexec2 "github.com/k-harness/operator/pkg/executor/grpcexec"
 )
 
 type grpcRequest struct {
@@ -17,8 +17,8 @@ func NewGRPCRequest(in *action.GRPC) RequestInterface {
 	return &grpcRequest{GRPC: in}
 }
 
-func (g *grpcRequest) Call(ctx context.Context, request executor.Request) (*ActionResult, error) {
-	gc := grpcexec.New()
+func (g *grpcRequest) Call(ctx context.Context, request executor2.Request) (*ActionResult, error) {
+	gc := grpcexec2.New()
 
 	// prepare headers
 	headers := make([]string, 0, len(request.Header))
@@ -26,7 +26,7 @@ func (g *grpcRequest) Call(ctx context.Context, request executor.Request) (*Acti
 		headers = append(headers, fmt.Sprintf("%s: %s", key, val))
 	}
 
-	code, body, err := gc.Call(ctx, g.GRPC.Addr, grpcexec.Path{
+	code, body, err := gc.Call(ctx, g.GRPC.Addr, grpcexec2.Path{
 		Package: g.GRPC.Package,
 		Service: g.GRPC.Service,
 		RPC:     g.GRPC.RPC,

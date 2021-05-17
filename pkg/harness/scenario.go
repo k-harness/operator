@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/k-harness/operator/api/v1alpha1"
-	"github.com/k-harness/operator/internal/harness/checker"
+	checker2 "github.com/k-harness/operator/pkg/harness/checker"
 )
 
 type scenarioProcessor struct {
@@ -87,7 +87,7 @@ func (s *scenarioProcessor) process(ctx context.Context, event v1alpha1.Event) e
 func (s *scenarioProcessor) checkComplete(c v1alpha1.Completion, result *ActionResult) error {
 	for _, condition := range c.Condition {
 		if condition.Response != nil {
-			if err := checker.ResCheck(s.Status.Variables, condition.Response).
+			if err := checker2.ResCheck(s.Status.Variables, condition.Response).
 				Is(result.Code, result.Body); err != nil {
 				return err
 			}

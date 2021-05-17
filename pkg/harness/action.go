@@ -6,12 +6,12 @@ import (
 	"fmt"
 
 	"github.com/k-harness/operator/api/v1alpha1"
-	"github.com/k-harness/operator/internal/executor"
-	"github.com/k-harness/operator/internal/harness/checker"
+	executor2 "github.com/k-harness/operator/pkg/executor"
+	checker2 "github.com/k-harness/operator/pkg/harness/checker"
 )
 
 type RequestInterface interface {
-	Call(ctx context.Context, request executor.Request) (*ActionResult, error)
+	Call(ctx context.Context, request executor2.Request) (*ActionResult, error)
 }
 
 var (
@@ -32,7 +32,7 @@ func NewAction(name string, a v1alpha1.Action, variables map[string]string) *Act
 
 // GetBody take stora sync.Map and fill
 func (a *Action) GetBody() ([]byte, error) {
-	return checker.Body(&a.Request.Body).GetBody(a.vars)
+	return checker2.Body(&a.Request.Body).GetBody(a.vars)
 }
 
 func (a *Action) Call(ctx context.Context) (*ActionResult, error) {
@@ -41,7 +41,7 @@ func (a *Action) Call(ctx context.Context) (*ActionResult, error) {
 		return nil, fmt.Errorf("action can't exstract body: %w", err)
 	}
 
-	return Call(ctx, a.Connect, executor.Request{
+	return Call(ctx, a.Connect, executor2.Request{
 		Body:   body,
 		Type:   a.Request.Body.Type,
 		Header: a.Request.Header,
