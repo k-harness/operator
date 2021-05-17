@@ -18,7 +18,9 @@ package main
 
 import (
 	"flag"
+	"math/rand"
 	"os"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -49,6 +51,8 @@ func init() {
 }
 
 func main() {
+	rand.Seed(time.Now().Unix())
+
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string

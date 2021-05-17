@@ -19,6 +19,9 @@ var TemplateFunctions = template.FuncMap{
 	"rnd_str": func(len int) string {
 		return rand.String(len)
 	},
+	"range_int": func(min, max int) int {
+		return rand.IntnRange(min, max)
+	},
 }
 
 func Body(in *v1alpha1.Body) *body {

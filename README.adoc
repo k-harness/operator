@@ -12,12 +12,6 @@ On M1 important to launch test via that point
 ----
 GOARCH=amd64 make test
 ----
-== CRD v1beta1 support
-1. `make build-v1beta1`
-2. edit crd_v1beta1.yaml
- a. rename v1 => v1beta1 CustomResourceDefinition's apiVersion
- b. rename jsonPath => JSONPath in spec.versions[].additionalPrinterColumns
- c. add new version to  `versions` slice because it's required k8s at least in 1.15 version
 
 = spec
 == spec.variables
@@ -52,6 +46,7 @@ used to exstract result from send grpc/http request and put in to variable store
 
 === golang templates
 Prepare body to send request via `variables` store and `functions`
+More info: https://golang.org/pkg/text/template/#hdr-Actions
 
 ==== variables
 Main feature the same as variable in your system, you just fill placeholerd with useful information which gives you possibility to make more intractable data
@@ -69,6 +64,17 @@ Example: `{{ uuid }}`
 Generate random string with specific len
 
 Example: `{{ rnd_str 32 }}`
+
+.range_int ::min ::max
+Generate random value from range `[min, max)`
+Returns error when min is greater or equal then max
+
+== CRD v1beta1 support
+1. `make build-v1beta1`
+2. edit crd_v1beta1.yaml
+a. rename v1 => v1beta1 CustomResourceDefinition's apiVersion
+b. rename jsonPath => JSONPath in spec.versions[].additionalPrinterColumns
+c. add new version to  `versions` slice because it's required k8s at least in 1.15 version
 
 == ToDo
 * [*] reconcile actor execute only 1 operation per reconciliation cycle
