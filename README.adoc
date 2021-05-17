@@ -86,3 +86,4 @@ c. add new version to  `versions` slice because it's required k8s at least in 1.
 * [ ] format support: request/response not only json should be user (it could be default value), but XML also required
 * [*] body should have `row` field not `json`, as we could use xml format ether
 * [*] infinite or repeated actions which should finish due to some condition
+* [ ] restart approach

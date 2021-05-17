@@ -29,7 +29,7 @@ spec:
         - /manager
         args:
         - --leader-elect
-        image: controller:latest
+        image: d7561985/karness:latest
         name: manager
         securityContext:
           allowPrivilegeEscalation: false
