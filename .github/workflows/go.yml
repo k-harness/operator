@@ -37,7 +37,7 @@ jobs:
       run: make docker-build IMG=${{ env.IMG }}
 
     - name: Push to Docker Hub
-      uses: se
+      uses: docker/build-push-action@v2
       with:
         push: true
         image: d7561985/${{ github.repository }}
