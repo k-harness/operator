@@ -24,7 +24,11 @@ jobs:
 
     - name: Define vars
       env:
-        IMG: d7561985/${{ github.repository }}:${{env.GITHUB_REF_SLUG}}
+        #IMG: d7561985/${{ github.repository }}:${{env.GITHUB_REF_SLUG}}
+        IMG: d7561985/${{ github.repository }}:latest
+      run: "echo Docker image  $IMG - ${{ env.IMG }}"
+
+    - name: check vars
       run: "echo Docker image  $IMG - ${{ env.IMG }}"
 
     - name: Log in to Docker Hub
@@ -44,4 +48,5 @@ jobs:
       with:
         push: true
         image: d7561985/${{ github.repository }}
-        tags: ${{env.GITHUB_REF_SLUG}}
+        tags: latest
+        #tags: ${{env.GITHUB_REF_SLUG}}
