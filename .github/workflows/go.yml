@@ -19,6 +19,9 @@ jobs:
       uses: docker-practice/actions-setup-docker@v1
       with: {}
 
+    - name: Inject slug/short variables
+      uses: rlespinasse/github-slug-action@v3.x
+
     - name: Define vars
       env:
         IMG: d7561985/${{ github.repository }}:${{env.GITHUB_REF_SLUG}}
@@ -30,8 +33,8 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Make build
-      run: make build
+#    - name: Make build
+#      run: make build
 
     - name: Make docker build with tests
       run: make docker-build IMG=${{ env.IMG }}
