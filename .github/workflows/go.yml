@@ -37,7 +37,7 @@ jobs:
       run: |
         make docker-build IMG=${{ env.IMG }}
         docker push ${{ env.IMG }}
-        ::set-env IMG2=$${{env.IMG}}
+        echo "IMG2=$${{env.IMG}}" >> $GITHUB_ENV
 
     - name: Push to Docker Hub
       uses: docker/build-push-action@v2
