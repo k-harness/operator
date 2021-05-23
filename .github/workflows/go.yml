@@ -40,7 +40,9 @@ jobs:
     - name: Make docker build with tests
       env:
         IMG: d7561985/${{ github.repository }}:${{env.GITHUB_REF_SLUG}}
-      run: make docker-build IMG=${{ env.IMG }}
+      run: |
+        make docker-build IMG=${{ env.IMG }}
+        docker push ${{ env.IMG }}
 
     - name: Push to Docker Hub
       uses: docker/build-push-action@v2
