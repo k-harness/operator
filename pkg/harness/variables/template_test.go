@@ -1,4 +1,4 @@
-package checker
+package variables
 
 import (
 	"fmt"
@@ -8,20 +8,19 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/google/uuid"
-	"github.com/k-harness/operator/api/v1alpha1"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTemplateFunctions(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 
+	x := New(nil, nil)
+
 	t.Run("uuid", func(t *testing.T) {
 		body := `{{ uuid }}`
-		b := Body(&v1alpha1.Body{Row: body})
+		res := x.Template(body)
 
-		res, err := b.GetBody(nil)
-		assert.NoError(t, err)
-		_, err = uuid.Parse(string(res))
+		_, err := uuid.Parse(res)
 		assert.NoError(t, err)
 	})
 
@@ -29,11 +28,9 @@ func TestTemplateFunctions(t *testing.T) {
 		const checkLen = 10
 
 		body := spew.Sprintf(`{{ rnd_str %d}}`, checkLen)
-		b := Body(&v1alpha1.Body{Row: body})
+		res := x.Template(body)
 
-		res, err := b.GetBody(nil)
-		assert.NoError(t, err)
-		assert.Len(t, string(res), checkLen)
+		assert.Len(t, res, checkLen)
 	})
 
 	t.Run("range_int", func(t *testing.T) {
@@ -50,8 +47,8 @@ func TestTemplateFunctions(t *testing.T) {
 		for _, v := range test {
 			t.Run(v.name, func(t *testing.T) {
 				body := spew.Sprintf(`{{ range_int %d %d}}`, v.min, v.max)
-				b := Body(&v1alpha1.Body{Row: body})
-				res, err := b.GetBody(nil)
+				res, err := x.TemplateBytes([]byte(body))
+
 				assert.Equal(t, v.err, err != nil, err)
 				fmt.Println(string(res))
 			})
@@ -60,8 +57,10 @@ func TestTemplateFunctions(t *testing.T) {
 	t.Run("conditions", func(t *testing.T) {
 		const body = `{{$rv := range_int 1 100}}{{ $ch := le $rv 30}}{{ if $ch }}{{ .WIN }}{{else }}{{ .LOSE }}{{end}}`
 		for i := 0; i < 10; i++ {
-			b := Body(&v1alpha1.Body{Row: body})
-			res, err := b.GetBody(map[string]string{"WIN": "10.00", "LOSE": "0.00"})
+			x.Update("WIN", "10.00")
+			x.Update("LOSE", "0.00")
+			res, err := x.TemplateBytes([]byte(body))
+
 			assert.NoError(t, err)
 			fmt.Println(string(res))
 		}

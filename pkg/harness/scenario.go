@@ -7,6 +7,7 @@ import (
 
 	"github.com/k-harness/operator/api/v1alpha1"
 	checker2 "github.com/k-harness/operator/pkg/harness/checker"
+	"github.com/k-harness/operator/pkg/harness/variables"
 )
 
 type scenarioProcessor struct {
@@ -41,11 +42,12 @@ func (s *scenarioProcessor) Step(ctx context.Context) error {
 		s.Status.Progress = sFmt(s.Status.Step, len(ev))
 	}()
 
-	if err := s.process(ctx, s.Spec.Events[s.Status.Step]); err != nil {
+	e := s.Spec.Events[s.Status.Step]
+	if err := s.process(ctx, e); err != nil {
 		s.Status.State = v1alpha1.Failed
 		s.Status.Message = err.Error()
 
-		return err
+		return fmt.Errorf("%s: %w", e.Name, err)
 	}
 
 	if s.Status.Of <= s.Status.Step {
@@ -57,17 +59,19 @@ func (s *scenarioProcessor) Step(ctx context.Context) error {
 }
 
 func (s *scenarioProcessor) process(ctx context.Context, event v1alpha1.Event) error {
-	action := NewAction(event.Name, event.Action, s.Status.Variables)
+	v := variables.New(s.Status.Variables, nil)
+	action := NewAction(event.Name, event.Action, v)
+
 	res, err := action.Call(ctx)
 	switch {
 	case err == nil:
 		// if condition completion is empty, we can ignore that?
 	case errors.Is(err, ErrNoConnectionData) && len(event.Complete.Condition) == 0:
 	default:
-		return fmt.Errorf("connection call error: %w", err)
+		return fmt.Errorf("action call error: %w", err)
 	}
 
-	if err = s.checkComplete(event.Complete, res); err != nil {
+	if err = s.checkComplete(event.Complete, res, v); err != nil {
 		return fmt.Errorf("check completion: %w", err)
 	}
 
@@ -84,10 +88,10 @@ func (s *scenarioProcessor) process(ctx context.Context, event v1alpha1.Event) e
 	return nil
 }
 
-func (s *scenarioProcessor) checkComplete(c v1alpha1.Completion, result *ActionResult) error {
+func (s *scenarioProcessor) checkComplete(c v1alpha1.Completion, result *ActionResult, v *variables.Store) error {
 	for _, condition := range c.Condition {
 		if condition.Response != nil {
-			if err := checker2.ResCheck(s.Status.Variables, condition.Response).
+			if err := checker2.ResCheck(v, condition.Response).
 				Is(result.Code, result.Body); err != nil {
 				return err
 			}

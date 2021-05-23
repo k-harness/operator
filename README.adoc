@@ -87,3 +87,7 @@ c. add new version to  `versions` slice because it's required k8s at least in 1.
 * [*] body should have `row` field not `json`, as we could use xml format ether
 * [*] infinite or repeated actions which should finish due to some condition
 * [ ] restart approach
+* [*] headers should use variable store
+* [*] kv should use variable store
+* [*] http path should use variable store
+* [ ] secrets / config maps

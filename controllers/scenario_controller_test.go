@@ -22,7 +22,6 @@ const (
 
 var _ = Context("empty scenario", func() {
 	ctx := context.Background()
-
 	key := types.NamespacedName{Name: name, Namespace: ns}
 
 	created := &scenariosv1alpha1.Scenario{

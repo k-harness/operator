@@ -1,7 +1,6 @@
 package checker
 
 import (
-	"bytes"
 	"fmt"
 
 	"text/template"
@@ -51,25 +50,4 @@ func (b *body) Get() ([]byte, error) {
 	}
 
 	return body, nil
-}
-
-func (b *body) GetBody(store map[string]string) ([]byte, error) {
-	res, err := b.Get()
-	if err != nil {
-		return nil, err
-	}
-
-	t, err := template.New("x").
-		Funcs(TemplateFunctions).
-		Parse(string(res))
-	if err != nil {
-		return nil, fmt.Errorf("template parse error: %w", err)
-	}
-
-	buf := bytes.NewBuffer(nil)
-	if err = t.Execute(buf, store); err != nil {
-		return nil, fmt.Errorf("store template executor: %w", err)
-	}
-
-	return buf.Bytes(), nil
 }

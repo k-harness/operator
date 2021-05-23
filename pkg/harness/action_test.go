@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/k-harness/operator/api/v1alpha1"
+	"github.com/k-harness/operator/pkg/harness/variables"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/client-go/util/jsonpath"
 )
@@ -39,18 +40,23 @@ func TestAction_GetBody(t *testing.T) {
 			"OK KV",
 			map[string]string{"MSG": "HELLO", "NUM": "123"},
 			v1alpha1.Body{
-				KV: map[string]v1alpha1.Any{"KEY": `{{.MSG}}.{{.NUM}}`},
+				KV: map[string]string{"KEY": `{{.MSG}}.{{.NUM}}`},
 			},
 			[]byte(`{"KEY":"HELLO.123"}`),
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			act := NewAction("name", v1alpha1.Action{Request: v1alpha1.Request{Body: test.body}}, test.kv)
+			act := NewAction(
+				"name",
+				v1alpha1.Action{Request: v1alpha1.Request{Body: test.body}},
+				variables.New(test.kv, nil),
+			)
 
-			res, err := act.GetBody()
+			res, err := act.GetRequest()
+
 			assert.NoError(t, err)
-			assert.Equal(t, test.want, res)
+			assert.Equal(t, test.want, res.Body)
 		})
 	}
 }

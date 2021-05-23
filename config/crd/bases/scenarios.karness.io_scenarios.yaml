@@ -105,6 +105,11 @@ spec:
                                 addr:
                                   type: string
                                 method:
+                                  enum:
+                                  - GET
+                                  - POST
+                                  - PUT
+                                  - DELETE
                                   type: string
                                 path:
                                   type: string

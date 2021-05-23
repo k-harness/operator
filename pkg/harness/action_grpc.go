@@ -17,7 +17,7 @@ func NewGRPCRequest(in *action.GRPC) RequestInterface {
 	return &grpcRequest{GRPC: in}
 }
 
-func (g *grpcRequest) Call(ctx context.Context, request executor2.Request) (*ActionResult, error) {
+func (g *grpcRequest) Call(ctx context.Context, request *executor2.Request) (*ActionResult, error) {
 	gc := grpcexec2.New()
 
 	// prepare headers

@@ -54,7 +54,7 @@ func (in *Body) DeepCopyInto(out *Body) {
 	*out = *in
 	if in.KV != nil {
 		in, out := &in.KV, &out.KV
-		*out = make(map[string]Any, len(*in))
+		*out = make(map[string]string, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
 		}

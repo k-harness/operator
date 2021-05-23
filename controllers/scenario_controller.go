@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -73,25 +74,29 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	if err := harness2.NewScenarioProcessor(item).Step(ctx); err != nil {
 		r.Log.Error(err, "scenario process",
 			"status", item.Status, "meta", item.TypeMeta, "obg-meta", item.ObjectMeta)
-		r.Recorder.Event(item, corev1.EventTypeWarning, "process", err.Error())
+
+		r.Recorder.Event(item, corev1.EventTypeWarning, "processor start",
+			fmt.Sprintf("event: %q error: %s", item.CurrentStepName(), err.Error()))
+
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	}
 
-	r.Recorder.Event(item, corev1.EventTypeNormal, "progress", "ok")
+	r.Recorder.Event(item, corev1.EventTypeNormal, "step in progress", item.CurrentStepName())
 	r.Log.Info("Complete step", "step", item.Status.Step, "of", item.Status.Of,
 		"variables", item.Status.Variables, "progress", item.Status.Progress,
-		"state", item.Status.State,
-		"repeat", item.Status.Repeat,
+		"state", item.Status.State, "repeat", item.Status.Repeat,
+		"event", item.CurrentStepName(),
 	)
 
 	// ToDo: crd:v1beta1 and v1 has different flow for saving
 	// for v1beta1 we should call r.Update method
 	// there as for v1 we should call special method r.Status().Update
 	if err := r.Status().Update(ctx, item.DeepCopy()); err != nil {
-		r.Log.Error(err, "status update error",
+		r.Log.Error(err, "status update error", "event", item.CurrentStepName(),
 			"status", item.Status, "meta", item.TypeMeta, "obg-meta", item.ObjectMeta)
 
-		r.Recorder.Event(item, corev1.EventTypeWarning, "update", err.Error())
+		r.Recorder.Event(item, corev1.EventTypeWarning, "processor update",
+			fmt.Sprintf("event: %q error: %s", item.CurrentStepName(), err.Error()))
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	}
 

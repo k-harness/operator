@@ -21,7 +21,7 @@ func NewHttpRequest(in *action.HTTP) RequestInterface {
 	return &httpRequest{HTTP: in}
 }
 
-func (in *httpRequest) Call(ctx context.Context, request executor2.Request) (*ActionResult, error) {
+func (in *httpRequest) Call(ctx context.Context, request *executor2.Request) (*ActionResult, error) {
 	uri, err := url.Parse(in.Addr)
 	if err != nil {
 		return nil, fmt.Errorf("bad http address: %w", err)

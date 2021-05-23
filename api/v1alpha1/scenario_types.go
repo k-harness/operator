@@ -86,6 +86,14 @@ type Scenario struct {
 	Status ScenarioStatus `json:"status,omitempty"`
 }
 
+func (in *Scenario) CurrentStepName() string {
+	if in.Status.Step < len(in.Spec.Events) {
+		return in.Spec.Events[in.Status.Step].Name
+	}
+
+	return ""
+}
+
 func (in *Scenario) IsBeingDeleted() bool {
 	return !in.ObjectMeta.DeletionTimestamp.IsZero()
 }
@@ -118,9 +126,9 @@ type Body struct {
 	Type string `json:"type"`
 
 	// ToDo: validate oneOF
-	KV   map[string]Any `json:"kv,omitempty"`
-	Byte []byte         `json:"byte,omitempty"`
-	Row  string         `json:"row,omitempty"`
+	KV   map[string]string `json:"kv,omitempty"`
+	Byte []byte            `json:"byte,omitempty"`
+	Row  string            `json:"row,omitempty"`
 }
 
 type Connect struct {
