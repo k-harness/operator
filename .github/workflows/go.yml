@@ -3,6 +3,8 @@ name: Deploy
 on:
   push:
     branches: [ master,dev ]
+    tags:
+      - v\d+.\d+.\d+
 
 env:
   IMAGE_NAME: karness-operator
