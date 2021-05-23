@@ -21,8 +21,8 @@ jobs:
 
     - name: Define vars
       env:
-        IMG: d7561985/${{ github.repository }}:${{ github.ref }}
-      run: echo "Docker image > ${IMG}"
+        IMG: d7561985/${{ github.repository }}:${GITHUB_REF##*/}
+      run: echo "Docker image > $IMG"
 
     - name: Log in to Docker Hub
       uses: docker/login-action@v1
@@ -40,4 +40,4 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: ${IMG}
+        tags: ${{env.IMG}}
