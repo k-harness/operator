@@ -1,10 +1,13 @@
-name: Go
+name: Deploy
 
 on:
   push:
+    branches: [ master,dev ]
+
+env:
+  IMAGE_NAME: karness-operator
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
@@ -30,15 +33,16 @@ jobs:
 
     - name: Make docker build with tests
       env:
-        IMG: d7561985/karness-operator:${{env.GITHUB_REF_SLUG}}
+        IMG: d7561985/${{ env.IMAGE_NAME }}:${{env.GITHUB_REF_SLUG}}
       run: |
         make docker-build IMG=${{ env.IMG }}
         docker push ${{ env.IMG }}
+        ::set-env IMG2=$${{env.IMG}}
 
     - name: Push to Docker Hub
       uses: docker/build-push-action@v2
       env:
-        IMG: d7561985/karness-operator:${{env.GITHUB_REF_SLUG}}
+        IMG: d7561985/${{ env.IMAGE_NAME }}:${{env.GITHUB_REF_SLUG}}
       with:
         push: true
         tags: ${{env.IMG}}
