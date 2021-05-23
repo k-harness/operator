@@ -22,5 +22,5 @@ jobs:
     - name: Make build
       run: make build
       
-    - name: Make build
+    - name: Make docker build
       run: make docker-build
