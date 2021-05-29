@@ -5,7 +5,7 @@ metadata:
   name: scenario-editor-role
 rules:
 - apiGroups:
-  - scenarios.karness.io
+  - core.karness.io
   resources:
   - scenarios
   verbs:
@@ -17,7 +17,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - scenarios.karness.io
+  - core.karness.io
   resources:
   - scenarios/status
   verbs:

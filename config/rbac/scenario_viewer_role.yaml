@@ -5,7 +5,7 @@ metadata:
   name: scenario-viewer-role
 rules:
 - apiGroups:
-  - scenarios.karness.io
+  - core.karness.io
   resources:
   - scenarios
   verbs:
@@ -13,7 +13,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - scenarios.karness.io
+  - core.karness.io
   resources:
   - scenarios/status
   verbs:
