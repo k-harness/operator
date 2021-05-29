@@ -29,7 +29,7 @@ var _ = Describe("scenario coverage", func() {
 			}}
 
 			By("creating processor")
-			processor := harness2.NewScenarioProcessor(item)
+			processor := harness2.NewScenarioProcessor(item, nil)
 			Expect(processor).ShouldNot(BeNil())
 
 			By("run 1 step call")
@@ -117,7 +117,7 @@ var _ = Describe("scenario coverage", func() {
 			}}
 
 			By("creating processor")
-			processor := harness2.NewScenarioProcessor(item)
+			processor := harness2.NewScenarioProcessor(item, nil)
 			Expect(processor).ShouldNot(BeNil())
 
 			By("run step")
@@ -200,7 +200,7 @@ var _ = Describe("scenario coverage", func() {
 			}}
 
 			By("creating processor")
-			processor := harness2.NewScenarioProcessor(item)
+			processor := harness2.NewScenarioProcessor(item, nil)
 			Expect(processor).ShouldNot(BeNil())
 
 			By("run step")

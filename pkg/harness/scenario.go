@@ -12,9 +12,10 @@ import (
 
 type scenarioProcessor struct {
 	*v1alpha1.Scenario
+	protected map[string]string
 }
 
-func NewScenarioProcessor(item *v1alpha1.Scenario) *scenarioProcessor {
+func NewScenarioProcessor(item *v1alpha1.Scenario, protected map[string]string) *scenarioProcessor {
 	item.Status.Of = len(item.Spec.Events)
 	item.Status.Progress = sFmt(item.Status.Step, len(item.Spec.Events))
 	item.Status.State = v1alpha1.Ready
@@ -27,11 +28,12 @@ func NewScenarioProcessor(item *v1alpha1.Scenario) *scenarioProcessor {
 		item.Status.Variables[k] = v
 	}
 
-	return &scenarioProcessor{Scenario: item}
+	return &scenarioProcessor{Scenario: item, protected: protected}
 }
 
 func (s *scenarioProcessor) Step(ctx context.Context) error {
 	if len(s.Spec.Events) == 0 {
+		s.Status.State = v1alpha1.Complete
 		return nil
 	}
 
@@ -59,7 +61,7 @@ func (s *scenarioProcessor) Step(ctx context.Context) error {
 }
 
 func (s *scenarioProcessor) process(ctx context.Context, event v1alpha1.Event) error {
-	v := variables.New(s.Status.Variables, nil)
+	v := variables.New(s.Status.Variables, s.protected)
 	action := NewAction(event.Name, event.Action, v)
 
 	res, err := action.Call(ctx)

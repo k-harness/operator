@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: example-config
+  namespace: default
+data:
+  key1: val1
+  key2: "1"
+  key3: "1.1"
+  key4: "false"
+---
+apiVersion: core.karness.io/v1alpha1
+kind: Scenario
+metadata:
+  name: example-config
+  namespace: default
+spec:
+  name: "test karness"
+  description: "check functionality"
+  from_config_map:
+    - name: example-config
+      #namespace: default # comment it and check if it would be properly loaded
+  variables:
+    XXX_KEY: YYY_VALUE
+  events: []
+

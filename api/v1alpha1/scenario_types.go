@@ -40,10 +40,13 @@ type ScenarioSpec struct {
 
 	// Foo is an example field of Scenario. Edit scenario_types.go to remove/update
 	Name        string `json:"name"`
-	Description string `json:"description"`
+	Description string `json:"description,omitempty"`
 
-	Events    []Event           `json:"events"`
-	Variables map[string]string `json:"variables"`
+	Events []Event `json:"events"`
+
+	Variables     map[string]string `json:"variables,omitempty"`
+	FromSecret    []NamespacedName  `json:"from_secret,omitempty"`
+	FromConfigMap []NamespacedName  `json:"from_config_map,omitempty"`
 }
 
 // ScenarioStatus defines the observed state of Scenario
@@ -179,7 +182,7 @@ type KV struct {
 	Field []KVFieldMatch `json:"field_match"`
 }
 
-// KVFields mean that key sh
+// KVFieldMatch mean that key sh
 type KVFieldMatch struct {
 	Key   string `json:"key"`
 	Value Any    `json:"value"`
@@ -187,4 +190,10 @@ type KVFieldMatch struct {
 
 func init() {
 	SchemeBuilder.Register(&Scenario{}, &ScenarioList{})
+}
+
+type NamespacedName struct {
+	Name string `json:"name"`
+	// by default use ns where scenario located
+	Namespace string `json:"namespace,omitempty"`
 }

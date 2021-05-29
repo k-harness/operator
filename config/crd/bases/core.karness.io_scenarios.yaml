@@ -211,6 +211,30 @@ spec:
                   - name
                   type: object
                 type: array
+              from_config_map:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      description: by default use ns where scenario located
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
+              from_secret:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      description: by default use ns where scenario located
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
               name:
                 description: Foo is an example field of Scenario. Edit scenario_types.go
                   to remove/update
@@ -220,10 +244,8 @@ spec:
                   type: string
                 type: object
             required:
-            - description
             - events
             - name
-            - variables
             type: object
           status:
             description: ScenarioStatus defines the observed state of Scenario

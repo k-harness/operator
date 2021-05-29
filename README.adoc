@@ -100,12 +100,13 @@ c. add new version to  `versions` slice because it's required k8s at least in 1.
 * [ ] response mutators. for example: response extracts http url and we need to get only one of parameters
 * [ ] format support: request/response not only json should be user (it could be default value), but XML also required
 * [*] body should have `row` field not `json`, as we could use xml format ether
-* [*] infinite or repeated actions which should finish due to some condition
+* [*] infinite or repeated actions which should finish due to some conditions
 * [ ] restart approach
 * [*] headers should use variable store
 * [*] kv should use variable store
 * [*] http path should use variable store
-* [ ] secrets / config maps
+* [*] secrets / config maps
 * [ ] event fire / listening
+* [ ] sets. inside action could
 * [ ] load test (parallel launch of N scenarios)
 * [ ] templating - declare once action, repeat in any other scenario

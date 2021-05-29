@@ -24,7 +24,6 @@ import (
 	"github.com/go-logr/logr"
 	scenariosv1alpha1 "github.com/k-harness/operator/api/v1alpha1"
 	harness2 "github.com/k-harness/operator/pkg/harness"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -71,7 +70,24 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 
-	if err := harness2.NewScenarioProcessor(item).Step(ctx); err != nil {
+	//
+	protected, err := r.loadConfig(ctx, item.Spec.FromConfigMap, req.Namespace)
+	if err != nil {
+		r.Log.Error(err, "load config map")
+		r.Recorder.Event(item, corev1.EventTypeWarning, "load config map", err.Error())
+	}
+
+	protectedSecret, err := r.loadSecret(ctx, item.Spec.FromSecret, req.Namespace)
+	if err != nil {
+		r.Log.Error(err, "load secret")
+		r.Recorder.Event(item, corev1.EventTypeWarning, "load secret", err.Error())
+	}
+
+	for k, v := range protected {
+		protectedSecret[k] = v
+	}
+
+	if err := harness2.NewScenarioProcessor(item, protected).Step(ctx); err != nil {
 		r.Log.Error(err, "scenario process",
 			"status", item.Status, "meta", item.TypeMeta, "obg-meta", item.ObjectMeta)
 
@@ -108,4 +124,58 @@ func (r *ScenarioReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&scenariosv1alpha1.Scenario{}).
 		Complete(r)
+}
+
+func (r *ScenarioReconciler) loadConfig(
+	ctx context.Context,
+	list []scenariosv1alpha1.NamespacedName,
+	defaultNS string,
+) (map[string]string, error) {
+	protected := make(map[string]string)
+
+	for _, v := range list {
+		cm := corev1.ConfigMap{}
+		ns := v.Namespace
+		if ns == "" {
+			ns = defaultNS
+		}
+
+		if err := r.Get(ctx, types.NamespacedName{Namespace: ns, Name: v.Name}, &cm); err != nil {
+			return nil, fmt.Errorf("load %q error: %w", v.Name, err)
+		}
+
+		for key, bytes := range cm.Data {
+			protected[key] = bytes
+			r.Log.Info("load config", "key", key, "val", bytes)
+		}
+	}
+
+	return protected, nil
+}
+
+func (r *ScenarioReconciler) loadSecret(
+	ctx context.Context,
+	list []scenariosv1alpha1.NamespacedName,
+	defaultNS string,
+) (map[string]string, error) {
+	protected := make(map[string]string)
+
+	for _, v := range list {
+		cm := corev1.Secret{}
+		ns := v.Namespace
+		if ns == "" {
+			ns = defaultNS
+		}
+
+		if err := r.Get(ctx, types.NamespacedName{Namespace: ns, Name: v.Name}, &cm); err != nil {
+			return nil, fmt.Errorf("load %q error: %w", v.Name, err)
+		}
+
+		for key, bytes := range cm.Data {
+			protected[key] = string(bytes)
+			r.Log.Info("load secret", "key", key, "val", string(bytes))
+		}
+	}
+
+	return protected, nil
 }

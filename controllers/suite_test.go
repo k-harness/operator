@@ -22,7 +22,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -54,27 +53,13 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths: []string{filepath.Join("..", "config", "crd", "bases"),
-			filepath.Join("..", "config", "samples", "example")},
+		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
 		ErrorIfCRDPathMissing: true,
-		CRDInstallOptions: envtest.CRDInstallOptions{
-			Paths:              []string{filepath.Join("..", "config", "samples", "example")},
-			ErrorIfPathMissing: true,
-		},
-		CRDs: []client.Object{
-			&scenariosv1alpha1.Scenario{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "1xxx1",
-					Namespace: "default",
-				},
-				Spec: scenariosv1alpha1.ScenarioSpec{
-					Name:        "123",
-					Description: "dx",
-					Events:      []scenariosv1alpha1.Event{},
-					Variables:   map[string]string{},
-				},
-			},
-		},
+		//CRDInstallOptions: envtest.CRDInstallOptions{
+		//	Paths:              []string{filepath.Join("..", "config", "samples", "example")},
+		//	ErrorIfPathMissing: true,
+		//},
+
 	}
 
 	err := scenariosv1alpha1.AddToScheme(scheme.Scheme)
@@ -97,7 +82,7 @@ var _ = BeforeSuite(func() {
 
 	//
 	err = (&ScenarioReconciler{
-		Client:   k8sManager.GetClient(),
+		Client:   k8sClient,
 		Scheme:   k8sManager.GetScheme(),
 		Log:      ctrl.Log.WithName("controllers").WithName("Scenario"),
 		Recorder: k8sManager.GetEventRecorderFor("scenario-controller"),
@@ -107,10 +92,9 @@ var _ = BeforeSuite(func() {
 	go func() {
 		err = k8sManager.Start(ctrl.SetupSignalHandler())
 		Expect(err).ToNot(HaveOccurred())
+
 	}()
 
-	k8sClient = k8sManager.GetClient()
-	Expect(k8sClient).ToNot(BeNil())
 }, 60)
 
 var _ = AfterSuite(func() {
