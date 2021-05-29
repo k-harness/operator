@@ -1,6 +1,16 @@
 == Karness.io crd operator
 Operator handles api described in `core.karness.io` group
 
+* https://drive.google.com/file/d/1cKkQtw_X11LQzafxFbDL-hl0LfhGSbnZ/view[Blueprint]
+* https://drive.google.com/file/d/1j8H1Pk63lUd4tcCukLWgyFd5kdJRlWgs/view?usp=sharing[Specification]
+
+=== Description
+Perform harness tests directly inside k8s cluster via http, grpc(reflection) calls emulating specific behaviour of target system on launched scenario and checking responses.
+
+Operator can extract some response variables inside status storage and use it during further requests.
+
+For example, you can ask one service to create game token, and use this token further
+
 
 === API
 * scenario
@@ -44,7 +54,6 @@ More info: https://golang.org/pkg/text/template/#hdr-Actions
 
 ==== variables
 Main feature the same as variable in your system, you just fill placeholerd with useful information which gives you possibility to make more intractable data
-
 
 ==== functions
 Some function called inside template which more flexible then only variable as we can use power of generator, for example
@@ -97,3 +106,6 @@ c. add new version to  `versions` slice because it's required k8s at least in 1.
 * [*] kv should use variable store
 * [*] http path should use variable store
 * [ ] secrets / config maps
+* [ ] event fire / listening
+* [ ] load test (parallel launch of N scenarios)
+* [ ] templating - declare once action, repeat in any other scenario
