@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: scenarios.scenarios.karness.io
+  name: scenarios.core.karness.io
 spec:
-  group: scenarios.karness.io
+  group: core.karness.io
   names:
     kind: Scenario
     listKind: ScenarioList

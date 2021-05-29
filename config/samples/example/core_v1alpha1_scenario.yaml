@@ -1,4 +1,4 @@
-apiVersion: scenarios.karness.io/v1alpha1
+apiVersion: core.karness.io/v1alpha1
 kind: Scenario
 metadata:
   name: example-foo
