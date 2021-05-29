@@ -1,19 +1,13 @@
-== Operator
+== Karness.io crd operator
+Operator handles api described in `core.karness.io` group
 
-=== Testing
 
-https://sdk.operatorframework.io/docs/building-operators/golang/testing/[SDK]
+=== API
+* scenario
 
-https://book.kubebuilder.io/reference/envtest.html[builder]
+==== Scenario
 
-https://book.kubebuilder.io/cronjob-tutorial/writing-tests.html[builder tests writing]
-On M1 important to launch test via that point
-[source]
-----
-GOARCH=amd64 make test
-----
-
-= spec
+===== spec
 == spec.variables
 
 Initial pollution of environment storage. Used to populate via `gotempalte`  body request or completition checks.
@@ -68,6 +62,18 @@ Example: `{{ rnd_str 32 }}`
 .range_int ::min ::max
 Generate random value from range `[min, max)`
 Returns error when min is greater or equal then max
+
+=== Testing
+https://sdk.operatorframework.io/docs/building-operators/golang/testing/[SDK]
+
+https://book.kubebuilder.io/reference/envtest.html[builder]
+
+https://book.kubebuilder.io/cronjob-tutorial/writing-tests.html[builder tests writing]
+On M1 important to launch test via that point
+[source]
+----
+GOARCH=amd64 make test
+----
 
 == CRD v1beta1 support
 1. `make build-v1beta1`
