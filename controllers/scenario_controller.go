@@ -70,45 +70,47 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 
+	step := item.CurrentStepName()
+
 	//
 	protected, err := r.loadConfig(ctx, item.Spec.FromConfigMap, req.Namespace)
 	if err != nil {
-		r.Log.Error(err, "load config map")
+		r.Log.Error(err, "load config map", "step", step)
 		r.Recorder.Event(item, corev1.EventTypeWarning, "load config map", err.Error())
 	}
 
 	protectedSecret, err := r.loadSecret(ctx, item.Spec.FromSecret, req.Namespace)
 	if err != nil {
-		r.Log.Error(err, "load secret")
+		r.Log.Error(err, "load secret", "step", step)
 		r.Recorder.Event(item, corev1.EventTypeWarning, "load secret", err.Error())
 	}
 
-	for k, v := range protected {
-		protectedSecret[k] = v
+	for k, v := range protectedSecret {
+		protected[k] = v
 	}
 
 	if err := harness2.NewScenarioProcessor(item, protected).Step(ctx); err != nil {
 		r.Log.Error(err, "scenario process",
-			"status", item.Status, "meta", item.TypeMeta, "obg-meta", item.ObjectMeta)
+			"step", step, "status", item.Status, "meta", item.TypeMeta, "obg-meta", item.ObjectMeta)
 
 		r.Recorder.Event(item, corev1.EventTypeWarning, "processor start",
-			fmt.Sprintf("event: %q error: %s", item.CurrentStepName(), err.Error()))
+			fmt.Sprintf("event: %q error: %s", step, err.Error()))
 
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	}
 
-	r.Recorder.Event(item, corev1.EventTypeNormal, "step in progress", item.CurrentStepName())
+	r.Recorder.Event(item, corev1.EventTypeNormal, "step complete", step)
 	r.Log.Info("Complete step", "step", item.Status.Step, "of", item.Status.Of,
 		"variables", item.Status.Variables, "progress", item.Status.Progress,
 		"state", item.Status.State, "repeat", item.Status.Repeat,
-		"event", item.CurrentStepName(),
+		"event", step,
 	)
 
 	// ToDo: crd:v1beta1 and v1 has different flow for saving
 	// for v1beta1 we should call r.Update method
 	// there as for v1 we should call special method r.Status().Update
 	if err := r.Status().Update(ctx, item.DeepCopy()); err != nil {
-		r.Log.Error(err, "status update error", "event", item.CurrentStepName(),
+		r.Log.Error(err, "status update error", "event", step,
 			"status", item.Status, "meta", item.TypeMeta, "obg-meta", item.ObjectMeta)
 
 		r.Recorder.Event(item, corev1.EventTypeWarning, "processor update",
