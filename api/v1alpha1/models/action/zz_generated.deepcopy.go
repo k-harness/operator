@@ -32,8 +32,10 @@ func (in *HTTP) DeepCopyInto(out *HTTP) {
 	}
 	if in.Query != nil {
 		in, out := &in.Query, &out.Query
-		*out = new(string)
-		**out = **in
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
 	}
 }
 

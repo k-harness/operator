@@ -1,4 +1,6 @@
 == Karness.io crd operator
+Launch harness/conformance/end-to-end tests inside environment close to production (dev, stage…).
+
 Operator handles api described in `core.karness.io` group
 
 * https://drive.google.com/file/d/1cKkQtw_X11LQzafxFbDL-hl0LfhGSbnZ/view[Blueprint]
@@ -20,7 +22,7 @@ For example, you can ask one service to create game token, and use this token fu
 ===== spec
 == spec.variables
 
-Initial pollution of environment storage. Used to populate via `gotempalte`  body request or completition checks.
+Initial pollution of environment storage. Used to populate via `gotempalte`  body request or competition checks.
 
 == spec.events
 Step representation. Only one step should be called at the time. It describes what action is required at that moment and how check that that action was meat our completion goal

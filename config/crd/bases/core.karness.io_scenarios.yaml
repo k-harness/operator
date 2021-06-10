@@ -114,7 +114,9 @@ spec:
                                 path:
                                   type: string
                                 query:
-                                  type: string
+                                  additionalProperties:
+                                    type: string
+                                  type: object
                               required:
                               - addr
                               - method

@@ -32,7 +32,12 @@ func (in *httpRequest) Call(ctx context.Context, request *executor2.Request) (*A
 	}
 
 	if in.Query != nil {
-		uri.RawQuery = *in.Query
+		q := make(url.Values)
+		for k, v := range in.Query {
+			q.Add(k, v)
+		}
+
+		uri.RawQuery = q.Encode()
 	}
 
 	req, err := http.NewRequest(in.Method, uri.String(), bytes.NewBuffer(request.Body))

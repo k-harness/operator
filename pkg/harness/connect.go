@@ -30,6 +30,10 @@ func (a *Action) Do(ctx context.Context, c v1alpha1.Connect, r *executor2.Reques
 			c.HTTP.Path = &p
 		}
 
+		for k, v := range c.HTTP.Query {
+			c.HTTP.Query[k] = a.vars.Template(v)
+		}
+
 		res, err := NewHttpRequest(c.HTTP).Call(ctx, r)
 		if err != nil {
 			return nil, fmt.Errorf("http call: %w", err)
