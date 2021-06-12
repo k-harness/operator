@@ -2,6 +2,7 @@ package harness
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/k-harness/operator/api/v1alpha1"
 	"github.com/k-harness/operator/pkg/harness/variables"
@@ -14,9 +15,7 @@ type scenarioProcessor struct {
 
 func NewScenarioProcessor(item *v1alpha1.Scenario, protected map[string]string) *scenarioProcessor {
 	item.Status.Of = len(item.Spec.Events)
-	item.Status.EventName = item.EventName()
-	item.Status.StepName = item.StepName()
-
+	item.Status.Progress = fmt.Sprintf("%s/%s", item.EventName(), item.StepName())
 	item.Status.State = v1alpha1.Ready
 
 	if item.Status.Variables == nil {

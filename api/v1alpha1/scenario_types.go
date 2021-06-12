@@ -62,9 +62,7 @@ type ScenarioStatus struct {
 	// Of total events in scenario list
 	Of int `json:"of"`
 
-	EventName string `json:"event_name"`
-
-	StepName string `json:"step_name"`
+	Progress string `json:"progress"`
 
 	// Count of repeat current state
 	Repeat int `json:"repeat"`
@@ -78,8 +76,7 @@ type ScenarioStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //-kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.status.selector
-//+kubebuilder:printcolumn:name="Event",type="string",JSONPath=".status.event_name",description="Event name"
-//+kubebuilder:printcolumn:name="Step",type="string",JSONPath=".status.step",description="Step name"
+//+kubebuilder:printcolumn:name="Current Step",type="string",JSONPath=".status.progress",description="Event/Step name"
 //+kubebuilder:printcolumn:name="Idx",type="integer",JSONPath=".status.idx",description="Current execution progress"
 //+kubebuilder:printcolumn:name="Of",type="integer",JSONPath=".status.of",description="Total events in queue"
 //+kubebuilder:printcolumn:name="Repeat",type="integer",JSONPath=".status.repeat",description="Repeat number"

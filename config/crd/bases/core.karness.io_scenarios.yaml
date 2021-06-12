@@ -17,13 +17,9 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: Event name
-      jsonPath: .status.event_name
-      name: Event
-      type: string
-    - description: Step name
-      jsonPath: .status.step
-      name: Step
+    - description: Event/Step name
+      jsonPath: .status.progress
+      name: Current Step
       type: string
     - description: Current execution progress
       jsonPath: .status.idx
@@ -284,14 +280,14 @@ spec:
               INSERT ADDITIONAL STATUS FIELD - define observed state of cluster Important:
               Run \"make\" to regenerate code after modifying this file"
             properties:
-              event_name:
-                type: string
               idx:
                 description: Idx current scenario in progress
                 type: integer
               of:
                 description: Of total events in scenario list
                 type: integer
+              progress:
+                type: string
               repeat:
                 description: Count of repeat current state
                 type: integer
@@ -299,21 +295,18 @@ spec:
                 type: string
               step:
                 type: integer
-              step_name:
-                type: string
               variables:
                 additionalProperties:
                   type: string
                 description: storage
                 type: object
             required:
-            - event_name
             - idx
             - of
+            - progress
             - repeat
             - state
             - step
-            - step_name
             - variables
             type: object
         type: object
