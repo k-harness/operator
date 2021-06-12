@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/k-harness/operator/api/v1alpha1"
-	executor2 "github.com/k-harness/operator/pkg/executor"
 	"github.com/k-harness/operator/pkg/harness/stuff"
 
 	"github.com/k-harness/operator/pkg/harness/variables"
@@ -17,7 +16,7 @@ var (
 )
 
 type RequestInterface interface {
-	Call(ctx context.Context, request *executor2.Request) (*stuff.Response, error)
+	Call(ctx context.Context, request *v1alpha1.Request) (*stuff.Response, error)
 }
 
 type stepRequest struct {
@@ -31,35 +30,16 @@ func NewRequest(name string, a *v1alpha1.Request, variables *variables.Store) *s
 	return &stepRequest{Name: name, Request: a, vars: variables}
 }
 
-// GetRequest take stora sync.Map and fill
-func (a *stepRequest) GetRequest() (*executor2.Request, error) {
-	body, err := stuff.ScenarioBody(&a.Request.Body).Get()
-	if err != nil {
-		return nil, fmt.Errorf("action can't exstract body: %w", err)
-	}
-
-	req := a.vars.TemplateBytesOrReturnWithout(body)
-	headers := a.vars.TemplateMapOrReturnWhatPossible(a.Request.Header)
-
-	return &executor2.Request{
-		Body:   req,
-		Type:   a.Body.Type,
-		Header: headers,
-	}, nil
-}
-
 func (a *stepRequest) Call(ctx context.Context) (*stuff.Response, error) {
-	req, err := a.GetRequest()
-	if err != nil {
-		return nil, err
-	}
+	// translate all request
+	a.vars.RequestTranslate(a.Request)
 
-	return a.Do(ctx, a.Connect, req)
+	return a.Do(ctx, a.Connect)
 }
 
-func (a *stepRequest) Do(ctx context.Context, c v1alpha1.Connect, r *executor2.Request) (*stuff.Response, error) {
+func (a *stepRequest) Do(ctx context.Context, c v1alpha1.Connect) (*stuff.Response, error) {
 	if c.GRPC != nil {
-		res, err := NewGRPCRequest(c.GRPC).Call(ctx, r)
+		res, err := NewGRPCRequest(c.GRPC).Call(ctx, a.Request)
 		if err != nil {
 			return nil, fmt.Errorf("grpc call: %w", err)
 		}
@@ -78,7 +58,7 @@ func (a *stepRequest) Do(ctx context.Context, c v1alpha1.Connect, r *executor2.R
 			c.HTTP.Query[k] = a.vars.Template(v)
 		}
 
-		res, err := NewHttpRequest(c.HTTP).Call(ctx, r)
+		res, err := NewHttpRequest(c.HTTP).Call(ctx, a.Request)
 		if err != nil {
 			return nil, fmt.Errorf("http call: %w", err)
 		}

@@ -114,3 +114,4 @@ c. add new version to  `versions` slice because it's required k8s at least in 1.
 * [ ] templating - declare once action, repeat in any other scenario
 * [*] tests checking secrets/config-maps variable usage
 * [ ] var binding via regular expressions
+* [*] http post form

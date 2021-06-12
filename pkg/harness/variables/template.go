@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/google/uuid"
+	"github.com/k-harness/operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/util/rand"
 )
 
@@ -72,4 +73,20 @@ func (s *Store) TemplateMapOrReturnWhatPossible(in map[string]string) map[string
 	}
 
 	return res
+}
+
+func (s *Store) RequestTranslate(in *v1alpha1.Request) {
+	in.Header = s.TemplateMapOrReturnWhatPossible(in.Header)
+
+	if len(in.Body.KV) > 0 {
+		in.Body.KV = s.TemplateMapOrReturnWhatPossible(in.Body.KV)
+	}
+
+	if len(in.Body.Byte) > 0 {
+		in.Body.Byte = s.TemplateBytesOrReturnWithout(in.Body.Byte)
+	}
+
+	if len(in.Body.Row) > 0 {
+		in.Body.Row = s.Template(in.Body.Row)
+	}
 }

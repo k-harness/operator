@@ -167,7 +167,8 @@ type Step struct {
 
 type Request struct {
 	Header map[string]string `json:"header,omitempty"`
-	Body   Body              `json:"body"`
+	Body   Body              `json:"body,omitempty"`
+
 	// Connect transport used by actor
 	Connect Connect `json:"connect"`
 }
@@ -177,6 +178,7 @@ type Body struct {
 	Type string `json:"type"`
 
 	// ToDo: validate oneOF
+	// http form required KV only
 	KV   map[string]string `json:"kv,omitempty"`
 	Byte []byte            `json:"byte,omitempty"`
 	Row  string            `json:"row,omitempty"`

@@ -9,8 +9,8 @@ import (
 	"net/url"
 	"path"
 
+	"github.com/k-harness/operator/api/v1alpha1"
 	"github.com/k-harness/operator/api/v1alpha1/models/action"
-	executor2 "github.com/k-harness/operator/pkg/executor"
 	"github.com/k-harness/operator/pkg/harness/stuff"
 )
 
@@ -22,7 +22,7 @@ func NewHttpRequest(in *action.HTTP) RequestInterface {
 	return &httpRequest{HTTP: in}
 }
 
-func (in *httpRequest) Call(ctx context.Context, request *executor2.Request) (*stuff.Response, error) {
+func (in *httpRequest) Call(ctx context.Context, request *v1alpha1.Request) (*stuff.Response, error) {
 	uri, err := url.Parse(in.Addr)
 	if err != nil {
 		return nil, fmt.Errorf("bad http address: %w", err)
@@ -41,20 +41,41 @@ func (in *httpRequest) Call(ctx context.Context, request *executor2.Request) (*s
 		uri.RawQuery = q.Encode()
 	}
 
-	req, err := http.NewRequest(in.Method, uri.String(), bytes.NewBuffer(request.Body))
-	if err != nil {
-		return nil, fmt.Errorf("http init request %q erorr :%w", uri.String(), err)
+	var hResp *http.Response
+
+	if in.HTTP.Form {
+		if len(request.Body.KV) == 0 {
+			return nil, fmt.Errorf("http post form require only KV body")
+		}
+
+		val := make(url.Values)
+		for k, v := range request.Body.KV {
+			val[k] = []string{v}
+		}
+
+		hResp, err = http.DefaultClient.PostForm(uri.String(), val)
+	} else {
+		body, err := stuff.ScenarioBody(&request.Body).Get()
+		if err != nil {
+			return nil, fmt.Errorf("action can't exstract body: %w", err)
+		}
+
+		req, err := http.NewRequest(in.Method, uri.String(), bytes.NewBuffer(body))
+		if err != nil {
+			return nil, fmt.Errorf("http init request %q erorr :%w", uri.String(), err)
+		}
+
+		for key, val := range request.Header {
+			req.Header.Add(key, val)
+		}
+
+		if request.Body.Type == "json" {
+			req.Header.Add("content-type", "application/json")
+		}
+
+		hResp, err = http.DefaultClient.Do(req)
 	}
 
-	for key, val := range request.Header {
-		req.Header.Add(key, val)
-	}
-
-	if request.Type == "json" {
-		req.Header.Add("content-type", "application/json")
-	}
-
-	hResp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("http action execute %q error %w", uri.String(), err)
 	}

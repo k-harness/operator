@@ -54,10 +54,11 @@ func TestAction_GetBody(t *testing.T) {
 				variables.New(test.kv, nil),
 			)
 
-			res, err := act.GetRequest()
+			act.vars.RequestTranslate(act.Request)
+			res, err := stuff.ScenarioBody(&act.Body).Get()
 
 			assert.NoError(t, err)
-			assert.Equal(t, test.want, res.Body)
+			assert.Equal(t, test.want, res)
 		})
 	}
 }

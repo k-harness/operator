@@ -101,7 +101,8 @@ spec:
                                       kv:
                                         additionalProperties:
                                           type: string
-                                        description: 'ToDo: validate oneOF'
+                                        description: 'ToDo: validate oneOF http form
+                                          required KV only'
                                         type: object
                                       row:
                                         type: string
@@ -141,6 +142,10 @@ spec:
                                         properties:
                                           addr:
                                             type: string
+                                          form:
+                                            description: 'send as post form method
+                                              warning: body required KV only'
+                                            type: boolean
                                           method:
                                             enum:
                                             - GET
@@ -164,7 +169,6 @@ spec:
                                       type: string
                                     type: object
                                 required:
-                                - body
                                 - connect
                                 type: object
                             type: object
@@ -185,7 +189,8 @@ spec:
                                             kv:
                                               additionalProperties:
                                                 type: string
-                                              description: 'ToDo: validate oneOF'
+                                              description: 'ToDo: validate oneOF http
+                                                form required KV only'
                                               type: object
                                             row:
                                               type: string

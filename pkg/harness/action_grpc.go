@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/k-harness/operator/api/v1alpha1"
 	"github.com/k-harness/operator/api/v1alpha1/models/action"
-	executor2 "github.com/k-harness/operator/pkg/executor"
 	grpcexec2 "github.com/k-harness/operator/pkg/executor/grpcexec"
 	"github.com/k-harness/operator/pkg/harness/stuff"
 )
@@ -18,7 +18,7 @@ func NewGRPCRequest(in *action.GRPC) RequestInterface {
 	return &grpcRequest{GRPC: in}
 }
 
-func (g *grpcRequest) Call(ctx context.Context, request *executor2.Request) (*stuff.Response, error) {
+func (g *grpcRequest) Call(ctx context.Context, request *v1alpha1.Request) (*stuff.Response, error) {
 	gc := grpcexec2.New()
 
 	// prepare headers
@@ -27,11 +27,16 @@ func (g *grpcRequest) Call(ctx context.Context, request *executor2.Request) (*st
 		headers = append(headers, fmt.Sprintf("%s: %s", key, val))
 	}
 
+	req, err := stuff.ScenarioBody(&request.Body).Get()
+	if err != nil {
+		return nil, fmt.Errorf("action can't exstract body: %w", err)
+	}
+
 	code, body, err := gc.Call(ctx, g.GRPC.Addr, grpcexec2.Path{
 		Package: g.GRPC.Package,
 		Service: g.GRPC.Service,
 		RPC:     g.GRPC.RPC,
-	}, request.Body, headers)
+	}, req, headers)
 
 	if err != nil {
 		return nil, err
