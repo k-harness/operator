@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/k-harness/operator/api/v1alpha1"
+	"github.com/k-harness/operator/pkg/harness/stuff"
 	"github.com/k-harness/operator/pkg/harness/variables"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/client-go/util/jsonpath"
@@ -86,20 +87,20 @@ func TestActionResult_GetKeyValue(t *testing.T) {
 			fields{Body: []byte(`{"message": 1}`)},
 			"message",
 			"",
-			ErrBadJsonPath,
+			stuff.ErrBadJsonPath,
 		},
 		{
 			"bad path",
 			fields{Body: []byte(`{"message": 1}`)},
 			"{.QQQ}",
 			"",
-			ErrNoKey,
+			stuff.ErrNoKey,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := &ActionResult{
+			a := &stuff.Response{
 				Code: tt.fields.Code,
 				Body: tt.fields.Body,
 			}

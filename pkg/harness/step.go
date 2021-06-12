@@ -6,7 +6,8 @@ import (
 	"fmt"
 
 	"github.com/k-harness/operator/api/v1alpha1"
-	checker2 "github.com/k-harness/operator/pkg/harness/checker"
+	"github.com/k-harness/operator/pkg/harness/checker"
+	"github.com/k-harness/operator/pkg/harness/stuff"
 	"github.com/k-harness/operator/pkg/harness/variables"
 )
 
@@ -33,9 +34,9 @@ func (s *step) Go(ctx context.Context) error {
 	return nil
 }
 
-func (s *step) request(ctx context.Context) (r *ActionResult, err error) {
+func (s *step) request(ctx context.Context) (r *stuff.Response, err error) {
 	if s.Action == nil {
-		return &ActionResult{}, nil
+		return &stuff.Response{}, nil
 	}
 
 	action := NewRequest(s.Name, s.Action.Request, s.v)
@@ -63,15 +64,15 @@ func (s *step) request(ctx context.Context) (r *ActionResult, err error) {
 	return res, nil
 }
 
-func (s *step) checkComplete(result *ActionResult) error {
+func (s *step) checkComplete(result *stuff.Response) error {
 	if s.Complete == nil {
 		return nil
 	}
 
 	for _, condition := range s.Complete.Condition {
 		if condition.Response != nil {
-			if err := checker2.ResCheck(s.v, condition.Response).
-				Is(result.Code, result.Body); err != nil {
+			if err := checker.ResCheck(condition.Response, s.v, result).
+				Is(); err != nil {
 				return err
 			}
 		}

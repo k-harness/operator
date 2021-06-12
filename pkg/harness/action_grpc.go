@@ -7,6 +7,7 @@ import (
 	"github.com/k-harness/operator/api/v1alpha1/models/action"
 	executor2 "github.com/k-harness/operator/pkg/executor"
 	grpcexec2 "github.com/k-harness/operator/pkg/executor/grpcexec"
+	"github.com/k-harness/operator/pkg/harness/stuff"
 )
 
 type grpcRequest struct {
@@ -17,7 +18,7 @@ func NewGRPCRequest(in *action.GRPC) RequestInterface {
 	return &grpcRequest{GRPC: in}
 }
 
-func (g *grpcRequest) Call(ctx context.Context, request *executor2.Request) (*ActionResult, error) {
+func (g *grpcRequest) Call(ctx context.Context, request *executor2.Request) (*stuff.Response, error) {
 	gc := grpcexec2.New()
 
 	// prepare headers
@@ -36,5 +37,5 @@ func (g *grpcRequest) Call(ctx context.Context, request *executor2.Request) (*Ac
 		return nil, err
 	}
 
-	return &ActionResult{Code: code.String(), Body: body}, nil
+	return &stuff.Response{Code: code.String(), Body: body}, nil
 }
