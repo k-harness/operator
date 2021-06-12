@@ -58,7 +58,7 @@ var _ = Context("empty scenario", func() {
 				return false
 			}
 
-			return sc1.Status.State != "" || sc1.Status.Progress != "" || sc1.Status.Message != ""
+			return sc1.Status.State != "" || sc1.Status.Idx > 0
 		}, timeout, interval).Should(BeTrue())
 	})
 })

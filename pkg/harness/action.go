@@ -27,7 +27,7 @@ type Action struct {
 	vars *variables.Store
 }
 
-func NewAction(name string, a v1alpha1.Action, variables *variables.Store) *Action {
+func NewStep(name string, a v1alpha1.Action, variables *variables.Store) *Action {
 	return &Action{Name: name, Action: a, vars: variables}
 }
 

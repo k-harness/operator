@@ -70,7 +70,7 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 
-	step := item.CurrentStepName()
+	step := item.EventName()
 
 	//
 	protected, err := r.loadConfig(ctx, item.Spec.FromConfigMap, req.Namespace)
@@ -100,8 +100,8 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	r.Recorder.Event(item, corev1.EventTypeNormal, "step complete", step)
-	r.Log.Info("Complete step", "step", item.Status.Step, "of", item.Status.Of,
-		"variables", item.Status.Variables, "progress", item.Status.Progress,
+	r.Log.Info("Complete step", "step", item.Status.Idx, "of", item.Status.Of,
+		"variables", item.Status.Variables,
 		"state", item.Status.State, "repeat", item.Status.Repeat,
 		"event", step,
 	)
@@ -114,7 +114,7 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			"status", item.Status, "meta", item.TypeMeta, "obg-meta", item.ObjectMeta)
 
 		r.Recorder.Event(item, corev1.EventTypeWarning, "processor update",
-			fmt.Sprintf("event: %q error: %s", item.CurrentStepName(), err.Error()))
+			fmt.Sprintf("event: %q error: %s", item.EventName(), err.Error()))
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	}
 

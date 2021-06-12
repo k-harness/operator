@@ -17,7 +17,9 @@ type scenarioProcessor struct {
 
 func NewScenarioProcessor(item *v1alpha1.Scenario, protected map[string]string) *scenarioProcessor {
 	item.Status.Of = len(item.Spec.Events)
-	item.Status.Progress = sFmt(item.Status.Step, len(item.Spec.Events))
+	item.Status.EventName = item.EventName()
+	item.Status.StepName = item.StepName()
+
 	item.Status.State = v1alpha1.Ready
 
 	if item.Status.Variables == nil {
@@ -38,47 +40,53 @@ func (s *scenarioProcessor) Step(ctx context.Context) error {
 	}
 
 	s.Status.State = v1alpha1.InProgress
-	ev := s.Spec.Events
 
-	defer func() {
-		s.Status.Progress = sFmt(s.Status.Step, len(ev))
-	}()
-
-	e := s.Spec.Events[s.Status.Step]
-	if err := s.process(ctx, e); err != nil {
+	if err := s.process(ctx); err != nil {
 		s.Status.State = v1alpha1.Failed
-		s.Status.Message = err.Error()
-
-		return fmt.Errorf("%s: %w", e.Name, err)
+		return err
 	}
 
-	if s.Status.Of <= s.Status.Step {
+	if s.Next() {
 		s.Status.State = v1alpha1.Complete
-		return nil
 	}
 
 	return nil
 }
 
-func (s *scenarioProcessor) process(ctx context.Context, event v1alpha1.Event) error {
+func (s *scenarioProcessor) process(ctx context.Context) error {
+	if len(s.Spec.Events[s.Status.Idx].Step) == 0 {
+		return nil
+	}
+
+	step := s.Spec.Events[s.Status.Idx].Step[s.Status.Step]
+
+	if err := s.step(ctx, step); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *scenarioProcessor) step(ctx context.Context, step v1alpha1.Step) error {
 	v := variables.New(s.Status.Variables, s.protected)
-	action := NewAction(event.Name, event.Action, v)
+
+	action := NewStep(step.Name, step.Action, v)
 
 	res, err := action.Call(ctx)
 	switch {
 	case err == nil:
 		// if condition completion is empty, we can ignore that?
-	case errors.Is(err, ErrNoConnectionData) && len(event.Complete.Condition) == 0:
+	case errors.Is(err, ErrNoConnectionData) && len(step.Complete.Condition) == 0:
 	default:
 		return fmt.Errorf("action call error: %w", err)
 	}
 
-	if err = s.checkComplete(event.Complete, res, v); err != nil {
+	if err = s.checkComplete(step.Complete, res, v); err != nil {
 		return fmt.Errorf("check completion: %w", err)
 	}
 
 	// only if completion is OK we're able to bind action
-	for variable, jpath := range event.Action.BindResult {
+	for variable, jpath := range step.Action.BindResult {
 		val, err := res.GetKeyValue(jpath)
 		if err != nil {
 			return fmt.Errorf("binding result key %s err %w", variable, err)
@@ -99,14 +107,6 @@ func (s *scenarioProcessor) checkComplete(c v1alpha1.Completion, result *ActionR
 			}
 		}
 	}
-
-	s.Status.Repeat++
-	if c.Repeat > 1 && c.Repeat > s.Status.Repeat {
-		return nil
-	}
-
-	s.Status.Step++
-	s.Status.Repeat = 0
 
 	return nil
 }

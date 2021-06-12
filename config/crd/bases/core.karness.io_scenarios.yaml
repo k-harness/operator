@@ -17,9 +17,17 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: Current execution progress
+    - description: Event name
+      jsonPath: .status.event_name
+      name: Event
+      type: string
+    - description: Step name
       jsonPath: .status.step
       name: Step
+      type: string
+    - description: Current execution progress
+      jsonPath: .status.idx
+      name: Idx
       type: integer
     - description: Total events in queue
       jsonPath: .status.of
@@ -29,17 +37,9 @@ spec:
       jsonPath: .status.repeat
       name: Repeat
       type: integer
-    - description: Progress of scenario
-      jsonPath: .status.progress
-      name: Progress
-      type: string
     - description: Status where is current progress
       jsonPath: .status.state
       name: Status
-      type: string
-    - description: Information related to some issues
-      jsonPath: .status.message
-      name: Message
       type: string
     name: v1alpha1
     schema:
@@ -66,104 +66,81 @@ spec:
               events:
                 items:
                   properties:
-                    action:
-                      properties:
-                        bind_result:
-                          additionalProperties:
-                            type: string
-                          description: 'BindResult save result KV representation in
-                            global variable storage This works only when result returns
-                            as JSON or maybe anything marshalable Right now only JSON
-                            supposed to be Key: result_key Val: variable name for
-                            binding'
-                          type: object
-                        connect:
-                          description: Connect transport used by actor
-                          properties:
-                            grpc:
-                              properties:
-                                addr:
-                                  description: 'required: true'
-                                  type: string
-                                package:
-                                  description: 'Proto package name required: true'
-                                  type: string
-                                rpc:
-                                  description: rpc command
-                                  type: string
-                                service:
-                                  description: 'required: true'
-                                  type: string
-                              required:
-                              - addr
-                              - package
-                              - rpc
-                              - service
-                              type: object
-                            http:
-                              properties:
-                                addr:
-                                  type: string
-                                method:
-                                  enum:
-                                  - GET
-                                  - POST
-                                  - PUT
-                                  - DELETE
-                                  type: string
-                                path:
-                                  type: string
-                                query:
-                                  additionalProperties:
-                                    type: string
-                                  type: object
-                              required:
-                              - addr
-                              - method
-                              type: object
-                          type: object
-                        request:
-                          description: request containment
-                          properties:
-                            body:
-                              properties:
-                                byte:
-                                  format: byte
-                                  type: string
-                                kv:
-                                  additionalProperties:
-                                    type: string
-                                  description: 'ToDo: validate oneOF'
-                                  type: object
-                                row:
-                                  type: string
-                                type:
-                                  enum:
-                                  - json
-                                  - xml
-                                  type: string
-                              required:
-                              - type
-                              type: object
-                            header:
-                              additionalProperties:
-                                type: string
-                              type: object
-                          required:
-                          - body
-                          type: object
-                      required:
-                      - connect
-                      - request
-                      type: object
-                    complete:
-                      properties:
-                        condition:
-                          items:
-                            description: Condition of complete show reason
+                    concurrent:
+                      description: 'ToDo: concurrency Run step paralel times'
+                      maximum: 10
+                      minimum: 1
+                      type: integer
+                    description:
+                      type: string
+                    name:
+                      type: string
+                    repeat:
+                      description: Repeat current item times
+                      minimum: 1
+                      type: integer
+                    step:
+                      items:
+                        properties:
+                          action:
                             properties:
-                              response:
-                                description: Response of condition check
+                              bind_result:
+                                additionalProperties:
+                                  type: string
+                                description: 'BindResult save result KV representation
+                                  in global variable storage This works only when
+                                  result returns as JSON or maybe anything marshalable
+                                  Right now only JSON supposed to be Key: result_key
+                                  Val: variable name for binding'
+                                type: object
+                              connect:
+                                description: Connect transport used by actor
+                                properties:
+                                  grpc:
+                                    properties:
+                                      addr:
+                                        description: 'required: true'
+                                        type: string
+                                      package:
+                                        description: 'Proto package name required:
+                                          true'
+                                        type: string
+                                      rpc:
+                                        description: rpc command
+                                        type: string
+                                      service:
+                                        description: 'required: true'
+                                        type: string
+                                    required:
+                                    - addr
+                                    - package
+                                    - rpc
+                                    - service
+                                    type: object
+                                  http:
+                                    properties:
+                                      addr:
+                                        type: string
+                                      method:
+                                        enum:
+                                        - GET
+                                        - POST
+                                        - PUT
+                                        - DELETE
+                                        type: string
+                                      path:
+                                        type: string
+                                      query:
+                                        additionalProperties:
+                                          type: string
+                                        type: object
+                                    required:
+                                    - addr
+                                    - method
+                                    type: object
+                                type: object
+                              request:
+                                description: request containment
                                 properties:
                                   body:
                                     properties:
@@ -185,32 +162,71 @@ spec:
                                     required:
                                     - type
                                     type: object
-                                  status:
-                                    type: string
+                                  header:
+                                    additionalProperties:
+                                      type: string
+                                    type: object
                                 required:
                                 - body
-                                - status
                                 type: object
                             required:
-                            - response
+                            - connect
+                            - request
                             type: object
-                          type: array
-                        description:
-                          type: string
-                        repeat:
-                          description: Repeat current item times
-                          minimum: 1
-                          type: integer
-                      required:
-                      - condition
-                      type: object
-                    description:
-                      type: string
-                    name:
-                      type: string
+                          complete:
+                            properties:
+                              condition:
+                                items:
+                                  description: Condition of complete show reason
+                                  properties:
+                                    response:
+                                      description: Response of condition check
+                                      properties:
+                                        body:
+                                          properties:
+                                            byte:
+                                              format: byte
+                                              type: string
+                                            kv:
+                                              additionalProperties:
+                                                type: string
+                                              description: 'ToDo: validate oneOF'
+                                              type: object
+                                            row:
+                                              type: string
+                                            type:
+                                              enum:
+                                              - json
+                                              - xml
+                                              type: string
+                                          required:
+                                          - type
+                                          type: object
+                                        status:
+                                          type: string
+                                      required:
+                                      - body
+                                      - status
+                                      type: object
+                                  required:
+                                  - response
+                                  type: object
+                                type: array
+                              description:
+                                type: string
+                            required:
+                            - condition
+                            type: object
+                          name:
+                            type: string
+                        required:
+                        - action
+                        - name
+                        type: object
+                      type: array
                   required:
-                  - action
                   - name
+                  - step
                   type: object
                 type: array
               from_config_map:
@@ -250,38 +266,40 @@ spec:
             - name
             type: object
           status:
-            description: ScenarioStatus defines the observed state of Scenario
+            description: "ScenarioStatus defines the observed state of Scenario \n
+              INSERT ADDITIONAL STATUS FIELD - define observed state of cluster Important:
+              Run \"make\" to regenerate code after modifying this file"
             properties:
-              message:
+              event_name:
                 type: string
+              idx:
+                description: Idx current scenario in progress
+                type: integer
               of:
                 description: Of total events in scenario list
                 type: integer
-              progress:
-                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
-                  of cluster Important: Run "make" to regenerate code after modifying
-                  this file'
-                type: string
               repeat:
                 description: Count of repeat current state
                 type: integer
               state:
                 type: string
               step:
-                description: Step current scenario in progress
                 type: integer
+              step_name:
+                type: string
               variables:
                 additionalProperties:
                   type: string
                 description: storage
                 type: object
             required:
-            - message
+            - event_name
+            - idx
             - of
-            - progress
             - repeat
             - state
             - step
+            - step_name
             - variables
             type: object
         type: object

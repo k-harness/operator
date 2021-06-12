@@ -50,21 +50,26 @@ type ScenarioSpec struct {
 }
 
 // ScenarioStatus defines the observed state of Scenario
+//
+// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+// Important: Run "make" to regenerate code after modifying this file
 type ScenarioStatus struct {
-	// Step current scenario in progress
+	// Idx current scenario in progress
+	Idx int `json:"idx"`
+
 	Step int `json:"step"`
 
 	// Of total events in scenario list
 	Of int `json:"of"`
 
+	EventName string `json:"event_name"`
+
+	StepName string `json:"step_name"`
+
 	// Count of repeat current state
 	Repeat int `json:"repeat"`
 
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	Progress string `json:"progress"`
-	State    State  `json:"state"`
-	Message  string `json:"message"`
+	State State `json:"state"`
 
 	// storage
 	Variables map[string]string `json:"variables"`
@@ -73,12 +78,12 @@ type ScenarioStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //-kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.status.selector
-//+kubebuilder:printcolumn:name="Step",type="integer",JSONPath=".status.step",description="Current execution progress"
+//+kubebuilder:printcolumn:name="Event",type="string",JSONPath=".status.event_name",description="Event name"
+//+kubebuilder:printcolumn:name="Step",type="string",JSONPath=".status.step",description="Step name"
+//+kubebuilder:printcolumn:name="Idx",type="integer",JSONPath=".status.idx",description="Current execution progress"
 //+kubebuilder:printcolumn:name="Of",type="integer",JSONPath=".status.of",description="Total events in queue"
 //+kubebuilder:printcolumn:name="Repeat",type="integer",JSONPath=".status.repeat",description="Repeat number"
-//+kubebuilder:printcolumn:name="Progress",type="string",JSONPath=".status.progress",description="Progress of scenario"
 //+kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.state",description="Status where is current progress"
-//+kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.message",description="Information related to some issues"
 
 // Scenario is the Schema for the scenarios API
 type Scenario struct {
@@ -89,9 +94,36 @@ type Scenario struct {
 	Status ScenarioStatus `json:"status,omitempty"`
 }
 
-func (in *Scenario) CurrentStepName() string {
-	if in.Status.Step < len(in.Spec.Events) {
-		return in.Spec.Events[in.Status.Step].Name
+// Next shift step and event counter, returns true if complete all
+func (in *Scenario) Next() bool {
+	in.Status.Step++
+
+	if in.Status.Step >= len(in.Spec.Events[in.Status.Idx].Step) {
+		in.Status.Step = 0
+		in.Status.Repeat++
+
+		if in.Status.Repeat >= in.Spec.Events[in.Status.Idx].Repeat {
+			in.Status.Idx++
+			in.Status.Repeat = 0
+		}
+	}
+
+	return in.Status.Idx >= len(in.Spec.Events)
+}
+
+func (in *Scenario) EventName() string {
+	if in.Status.Idx < len(in.Spec.Events) {
+		return in.Spec.Events[in.Status.Idx].Name
+	}
+
+	return ""
+}
+
+func (in *Scenario) StepName() string {
+	if in.Status.Idx < len(in.Spec.Events) {
+		if e := in.Spec.Events[in.Status.Idx]; in.Status.Step < len(e.Step) {
+			return e.Step[in.Status.Step].Name
+		}
 	}
 
 	return ""
@@ -114,6 +146,22 @@ type ScenarioList struct {
 type Event struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
+
+	// Repeat current item times
+	// +kubebuilder:validation:Minimum=1
+	Repeat int `json:"repeat,omitempty"`
+
+	// ToDo: concurrency
+	// Run step paralel times
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=10
+	Concurrent int `json:"concurrent,omitempty"`
+
+	Step []Step `json:"step"`
+}
+
+type Step struct {
+	Name string `json:"name"`
 
 	Action   Action     `json:"action"`
 	Complete Completion `json:"complete,omitempty"`
@@ -158,10 +206,6 @@ type Any string
 
 type Completion struct {
 	Description string `json:"description,omitempty"`
-
-	// Repeat current item times
-	// +kubebuilder:validation:Minimum=1
-	Repeat int `json:"repeat,omitempty"`
 
 	Condition []Condition `json:"condition"`
 }

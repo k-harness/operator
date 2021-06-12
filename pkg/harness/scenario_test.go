@@ -23,8 +23,8 @@ var _ = Describe("scenario coverage", func() {
 
 			item := &v1alpha1.Scenario{Spec: v1alpha1.ScenarioSpec{
 				Events: []v1alpha1.Event{
-					{Complete: v1alpha1.Completion{Repeat: 2}},
-					{Complete: v1alpha1.Completion{Repeat: 1}},
+					{Repeat: 2},
+					{Repeat: 1},
 				},
 			}}
 
@@ -36,14 +36,14 @@ var _ = Describe("scenario coverage", func() {
 			Expect(processor.Step(context.Background())).ShouldNot(HaveOccurred())
 
 			By("still should be in 0 stage", func() {
-				Expect(item.Status.Step).Should(Equal(0))
+				Expect(item.Status.Idx).Should(Equal(0))
 			})
 
 			By("run 2 step call")
 			Expect(processor.Step(context.Background())).ShouldNot(HaveOccurred())
 
 			By("should shift to next stage", func() {
-				Expect(item.Status.Step).Should(Equal(1))
+				Expect(item.Status.Idx).Should(Equal(1))
 
 				By("reseting repeat status counter")
 				Expect(item.Status.Repeat).Should(Equal(0))
@@ -101,12 +101,16 @@ var _ = Describe("scenario coverage", func() {
 			item := &v1alpha1.Scenario{Spec: v1alpha1.ScenarioSpec{
 				Events: []v1alpha1.Event{
 					{
-						Action: actionZero,
-						Complete: v1alpha1.Completion{
-							Condition: []v1alpha1.Condition{{
-								Response: &v1alpha1.ConditionResponse{
-									Status: "200",
-								}},
+						Step: []v1alpha1.Step{
+							{
+								Action: actionZero,
+								Complete: v1alpha1.Completion{
+									Condition: []v1alpha1.Condition{{
+										Response: &v1alpha1.ConditionResponse{
+											Status: "200",
+										}},
+									},
+								},
 							},
 						},
 					},
@@ -125,7 +129,7 @@ var _ = Describe("scenario coverage", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			By("expect step will increased")
-			Expect(item.Status.Step).Should(Equal(1))
+			Expect(item.Status.Idx).Should(Equal(1))
 
 			By("expect mock server took correct header what was described in request headers")
 			Expect(fx.RequestAccepted.Headers).Should(
@@ -171,25 +175,29 @@ var _ = Describe("scenario coverage", func() {
 			item := &v1alpha1.Scenario{Spec: v1alpha1.ScenarioSpec{
 				Events: []v1alpha1.Event{
 					{
-						Action: v1alpha1.Action{
-							Request: v1alpha1.Request{},
-							Connect: v1alpha1.Connect{
-								GRPC: &action.GRPC{
-									Addr:    l.Addr().String(),
-									Package: "helloworld",
-									Service: "Greeter",
-									RPC:     "SayHello",
+						Step: []v1alpha1.Step{
+							{
+								Action: v1alpha1.Action{
+									Request: v1alpha1.Request{},
+									Connect: v1alpha1.Connect{
+										GRPC: &action.GRPC{
+											Addr:    l.Addr().String(),
+											Package: "helloworld",
+											Service: "Greeter",
+											RPC:     "SayHello",
+										},
+									},
+									BindResult: map[string]string{
+										"TOKEN": "{.message}",
+									},
 								},
-							},
-							BindResult: map[string]string{
-								"TOKEN": "{.message}",
-							},
-						},
-						Complete: v1alpha1.Completion{
-							Condition: []v1alpha1.Condition{{
-								Response: &v1alpha1.ConditionResponse{
-									Status: "OK",
-								}},
+								Complete: v1alpha1.Completion{
+									Condition: []v1alpha1.Condition{{
+										Response: &v1alpha1.ConditionResponse{
+											Status: "OK",
+										}},
+									},
+								},
 							},
 						},
 					},
