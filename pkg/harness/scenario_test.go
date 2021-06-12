@@ -77,8 +77,8 @@ var _ = Describe("scenario coverage", func() {
 			}()
 
 			By("prepare scenario asset")
-			actionZero := v1alpha1.Action{
-				Request: v1alpha1.Request{
+			actionZero := &v1alpha1.Action{
+				Request: &v1alpha1.Request{
 					Header: map[string]string{
 						"Secret": "my-secret",
 					},
@@ -86,12 +86,12 @@ var _ = Describe("scenario coverage", func() {
 						Type: "json", // under hood clien send context-type application/json
 						Row:  `{"id": "{{ uuid }}", "client": "{{.CLIENT_ID}}", "rnd_str": "{{ rnd_str 32 }}"}`,
 					},
-				},
-				Connect: v1alpha1.Connect{
-					HTTP: &action.HTTP{
-						Addr:   fmt.Sprintf("http://%s", l.Addr().String()),
-						Method: http.MethodPost,
-						Path:   strRef("/auth"),
+					Connect: v1alpha1.Connect{
+						HTTP: &action.HTTP{
+							Addr:   fmt.Sprintf("http://%s", l.Addr().String()),
+							Method: http.MethodPost,
+							Path:   strRef("/auth"),
+						},
 					},
 				},
 				BindResult: map[string]string{
@@ -104,7 +104,7 @@ var _ = Describe("scenario coverage", func() {
 						Step: []v1alpha1.Step{
 							{
 								Action: actionZero,
-								Complete: v1alpha1.Completion{
+								Complete: &v1alpha1.Completion{
 									Condition: []v1alpha1.Condition{{
 										Response: &v1alpha1.ConditionResponse{
 											Status: "200",
@@ -177,21 +177,22 @@ var _ = Describe("scenario coverage", func() {
 					{
 						Step: []v1alpha1.Step{
 							{
-								Action: v1alpha1.Action{
-									Request: v1alpha1.Request{},
-									Connect: v1alpha1.Connect{
-										GRPC: &action.GRPC{
-											Addr:    l.Addr().String(),
-											Package: "helloworld",
-											Service: "Greeter",
-											RPC:     "SayHello",
+								Action: &v1alpha1.Action{
+									Request: &v1alpha1.Request{
+										Connect: v1alpha1.Connect{
+											GRPC: &action.GRPC{
+												Addr:    l.Addr().String(),
+												Package: "helloworld",
+												Service: "Greeter",
+												RPC:     "SayHello",
+											},
 										},
 									},
 									BindResult: map[string]string{
 										"TOKEN": "{.message}",
 									},
 								},
-								Complete: v1alpha1.Completion{
+								Complete: &v1alpha1.Completion{
 									Condition: []v1alpha1.Condition{{
 										Response: &v1alpha1.ConditionResponse{
 											Status: "OK",

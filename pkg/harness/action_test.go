@@ -47,9 +47,9 @@ func TestAction_GetBody(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			act := NewStep(
+			act := NewRequest(
 				"name",
-				v1alpha1.Action{Request: v1alpha1.Request{Body: test.body}},
+				&v1alpha1.Request{Body: test.body},
 				variables.New(test.kv, nil),
 			)
 

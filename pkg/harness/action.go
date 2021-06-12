@@ -20,19 +20,19 @@ var (
 	ErrBadJsonPath = errors.New("bad json path formula")
 )
 
-type Action struct {
+type stepRequest struct {
 	Name string
 
-	v1alpha1.Action
+	*v1alpha1.Request
 	vars *variables.Store
 }
 
-func NewStep(name string, a v1alpha1.Action, variables *variables.Store) *Action {
-	return &Action{Name: name, Action: a, vars: variables}
+func NewRequest(name string, a *v1alpha1.Request, variables *variables.Store) *stepRequest {
+	return &stepRequest{Name: name, Request: a, vars: variables}
 }
 
 // GetRequest take stora sync.Map and fill
-func (a *Action) GetRequest() (*executor2.Request, error) {
+func (a *stepRequest) GetRequest() (*executor2.Request, error) {
 	body, err := checker2.Body(&a.Request.Body).Get()
 	if err != nil {
 		return nil, fmt.Errorf("action can't exstract body: %w", err)
@@ -43,12 +43,12 @@ func (a *Action) GetRequest() (*executor2.Request, error) {
 
 	return &executor2.Request{
 		Body:   req,
-		Type:   a.Request.Body.Type,
+		Type:   a.Body.Type,
 		Header: headers,
 	}, nil
 }
 
-func (a *Action) Call(ctx context.Context) (*ActionResult, error) {
+func (a *stepRequest) Call(ctx context.Context) (*ActionResult, error) {
 	req, err := a.GetRequest()
 	if err != nil {
 		return nil, err

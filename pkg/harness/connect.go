@@ -13,7 +13,7 @@ var (
 	ErrNoConnectionData = errors.New("no connection data")
 )
 
-func (a *Action) Do(ctx context.Context, c v1alpha1.Connect, r *executor2.Request) (*ActionResult, error) {
+func (a *stepRequest) Do(ctx context.Context, c v1alpha1.Connect, r *executor2.Request) (*ActionResult, error) {
 	if c.GRPC != nil {
 		res, err := NewGRPCRequest(c.GRPC).Call(ctx, r)
 		if err != nil {

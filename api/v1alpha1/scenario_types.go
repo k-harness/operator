@@ -161,15 +161,17 @@ type Event struct {
 }
 
 type Step struct {
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 
-	Action   Action     `json:"action"`
-	Complete Completion `json:"complete,omitempty"`
+	Action   *Action     `json:"action,omitempty"`
+	Complete *Completion `json:"complete,omitempty"`
 }
 
 type Request struct {
 	Header map[string]string `json:"header,omitempty"`
 	Body   Body              `json:"body"`
+	// Connect transport used by actor
+	Connect Connect `json:"connect"`
 }
 
 type Body struct {
@@ -188,11 +190,8 @@ type Connect struct {
 }
 
 type Action struct {
-	// request containment
-	Request Request `json:"request"`
-
-	// Connect transport used by actor
-	Connect Connect `json:"connect"`
+	// makes requests via some transport protocols
+	Request *Request `json:"request,omitempty"`
 
 	// BindResult save result KV representation in global variable storage
 	// This works only when result returns as JSON or maybe anything marshalable

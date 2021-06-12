@@ -2,11 +2,8 @@ package harness
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"github.com/k-harness/operator/api/v1alpha1"
-	checker2 "github.com/k-harness/operator/pkg/harness/checker"
 	"github.com/k-harness/operator/pkg/harness/variables"
 )
 
@@ -58,59 +55,15 @@ func (s *scenarioProcessor) process(ctx context.Context) error {
 		return nil
 	}
 
-	step := s.Spec.Events[s.Status.Idx].Step[s.Status.Step]
+	ss := s.Spec.Events[s.Status.Idx].Step[s.Status.Step]
+	v := variables.New(s.Status.Variables, s.protected)
+	stepper := NewStep(ss, v)
 
-	if err := s.step(ctx, step); err != nil {
+	if err := stepper.Go(ctx); err != nil {
 		return err
 	}
 
-	return nil
-}
-
-func (s *scenarioProcessor) step(ctx context.Context, step v1alpha1.Step) error {
-	v := variables.New(s.Status.Variables, s.protected)
-
-	action := NewStep(step.Name, step.Action, v)
-
-	res, err := action.Call(ctx)
-	switch {
-	case err == nil:
-		// if condition completion is empty, we can ignore that?
-	case errors.Is(err, ErrNoConnectionData) && len(step.Complete.Condition) == 0:
-	default:
-		return fmt.Errorf("action call error: %w", err)
-	}
-
-	if err = s.checkComplete(step.Complete, res, v); err != nil {
-		return fmt.Errorf("check completion: %w", err)
-	}
-
-	// only if completion is OK we're able to bind action
-	for variable, jpath := range step.Action.BindResult {
-		val, err := res.GetKeyValue(jpath)
-		if err != nil {
-			return fmt.Errorf("binding result key %s err %w", variable, err)
-		}
-
-		s.Status.Variables[variable] = val
-	}
+	stepper.UpdateStore(s.Status.Variables)
 
 	return nil
-}
-
-func (s *scenarioProcessor) checkComplete(c v1alpha1.Completion, result *ActionResult, v *variables.Store) error {
-	for _, condition := range c.Condition {
-		if condition.Response != nil {
-			if err := checker2.ResCheck(v, condition.Response).
-				Is(result.Code, result.Body); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-func sFmt(start, end int) string {
-	return fmt.Sprintf("%d of %d", start, end)
 }

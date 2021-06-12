@@ -93,54 +93,8 @@ spec:
                                   Right now only JSON supposed to be Key: result_key
                                   Val: variable name for binding'
                                 type: object
-                              connect:
-                                description: Connect transport used by actor
-                                properties:
-                                  grpc:
-                                    properties:
-                                      addr:
-                                        description: 'required: true'
-                                        type: string
-                                      package:
-                                        description: 'Proto package name required:
-                                          true'
-                                        type: string
-                                      rpc:
-                                        description: rpc command
-                                        type: string
-                                      service:
-                                        description: 'required: true'
-                                        type: string
-                                    required:
-                                    - addr
-                                    - package
-                                    - rpc
-                                    - service
-                                    type: object
-                                  http:
-                                    properties:
-                                      addr:
-                                        type: string
-                                      method:
-                                        enum:
-                                        - GET
-                                        - POST
-                                        - PUT
-                                        - DELETE
-                                        type: string
-                                      path:
-                                        type: string
-                                      query:
-                                        additionalProperties:
-                                          type: string
-                                        type: object
-                                    required:
-                                    - addr
-                                    - method
-                                    type: object
-                                type: object
                               request:
-                                description: request containment
+                                description: makes requests via some transport protocols
                                 properties:
                                   body:
                                     properties:
@@ -162,16 +116,60 @@ spec:
                                     required:
                                     - type
                                     type: object
+                                  connect:
+                                    description: Connect transport used by actor
+                                    properties:
+                                      grpc:
+                                        properties:
+                                          addr:
+                                            description: 'required: true'
+                                            type: string
+                                          package:
+                                            description: 'Proto package name required:
+                                              true'
+                                            type: string
+                                          rpc:
+                                            description: rpc command
+                                            type: string
+                                          service:
+                                            description: 'required: true'
+                                            type: string
+                                        required:
+                                        - addr
+                                        - package
+                                        - rpc
+                                        - service
+                                        type: object
+                                      http:
+                                        properties:
+                                          addr:
+                                            type: string
+                                          method:
+                                            enum:
+                                            - GET
+                                            - POST
+                                            - PUT
+                                            - DELETE
+                                            type: string
+                                          path:
+                                            type: string
+                                          query:
+                                            additionalProperties:
+                                              type: string
+                                            type: object
+                                        required:
+                                        - addr
+                                        - method
+                                        type: object
+                                    type: object
                                   header:
                                     additionalProperties:
                                       type: string
                                     type: object
                                 required:
                                 - body
+                                - connect
                                 type: object
-                            required:
-                            - connect
-                            - request
                             type: object
                           complete:
                             properties:
@@ -219,9 +217,6 @@ spec:
                             type: object
                           name:
                             type: string
-                        required:
-                        - action
-                        - name
                         type: object
                       type: array
                   required:

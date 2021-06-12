@@ -22,5 +22,9 @@ spec:
       #namespace: default # comment it and check if it would be properly loaded
   variables:
     XXX_KEY: YYY_VALUE
-  events: []
+  events:
+    - name: stub check
+      step:
+        - name: ""
+
 
