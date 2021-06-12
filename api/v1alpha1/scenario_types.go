@@ -212,7 +212,9 @@ type Completion struct {
 // Condition of complete show reason
 type Condition struct {
 	// Response of condition check
-	Response *ConditionResponse `json:"response"`
+	Response *ConditionResponse `json:"response,omitempty"`
+
+	Variables *ConditionVariables `json:"variables,omitempty"`
 }
 
 // ConditionResponse contains competition condition for source
@@ -221,14 +223,24 @@ type ConditionResponse struct {
 	Body   Body   `json:"body"`
 }
 
-type KV struct {
-	Field []KVFieldMatch `json:"field_match"`
+type Operator string
+
+const (
+	Required Operator = "required"
+	Equal    Operator = "equal"
+)
+
+type VarOptionCheck struct {
+	// +kubebuilder:validation:Enum=required;equal
+	// how should we check value or key provided
+	Operator Operator `json:"operator"`
+
+	Value string `json:"value,omitempty"`
 }
 
-// KVFieldMatch mean that key sh
-type KVFieldMatch struct {
-	Key   string `json:"key"`
-	Value Any    `json:"value"`
+type ConditionVariables struct {
+	// key of map represent storage key
+	KV map[string]VarOptionCheck `json:"kv,omitempty"`
 }
 
 func init() {

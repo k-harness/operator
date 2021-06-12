@@ -96,15 +96,15 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		r.Recorder.Event(item, corev1.EventTypeWarning, "processor start",
 			fmt.Sprintf("event: %q error: %s", step, err.Error()))
 
-		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		//return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+	} else {
+		r.Recorder.Event(item, corev1.EventTypeNormal, "step complete", step)
+		r.Log.Info("Complete step", "step", item.Status.Idx, "of", item.Status.Of,
+			"variables", item.Status.Variables,
+			"state", item.Status.State, "repeat", item.Status.Repeat,
+			"event", step,
+		)
 	}
-
-	r.Recorder.Event(item, corev1.EventTypeNormal, "step complete", step)
-	r.Log.Info("Complete step", "step", item.Status.Idx, "of", item.Status.Of,
-		"variables", item.Status.Variables,
-		"state", item.Status.State, "repeat", item.Status.Repeat,
-		"event", step,
-	)
 
 	// ToDo: crd:v1beta1 and v1 has different flow for saving
 	// for v1beta1 we should call r.Update method

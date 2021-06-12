@@ -71,9 +71,15 @@ func (s *step) checkComplete(result *stuff.Response) error {
 
 	for _, condition := range s.Complete.Condition {
 		if condition.Response != nil {
-			if err := checker.ResCheck(condition.Response, s.v, result).
+			if err := checker.Res(condition.Response, s.v, result).
 				Is(); err != nil {
-				return err
+				return fmt.Errorf("res check: %w", err)
+			}
+		}
+
+		if condition.Variables != nil {
+			if err := checker.Vars(condition.Variables, s.v).Is(); err != nil {
+				return fmt.Errorf("var check: %w", err)
 			}
 		}
 	}

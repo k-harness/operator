@@ -24,6 +24,7 @@ func (s *Store) Update(k, v string) {
 	s.store[k] = v
 }
 
-func (s *Store) Get(key string) string {
-	return s.store[key]
+func (s *Store) Get(key string) (string, bool) {
+	v, ok := s.store[key]
+	return v, ok
 }

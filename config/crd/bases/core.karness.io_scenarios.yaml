@@ -206,8 +206,27 @@ spec:
                                       - body
                                       - status
                                       type: object
-                                  required:
-                                  - response
+                                    variables:
+                                      properties:
+                                        kv:
+                                          additionalProperties:
+                                            properties:
+                                              operator:
+                                                description: how should we check value
+                                                  or key provided
+                                                enum:
+                                                - required
+                                                - equal
+                                                type: string
+                                              value:
+                                                type: string
+                                            required:
+                                            - operator
+                                            type: object
+                                          description: key of map represent storage
+                                            key
+                                          type: object
+                                      type: object
                                   type: object
                                 type: array
                               description:

@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 )
 
-type ResCheckInterface interface {
+type Interface interface {
 	Is() error
 }
 
@@ -20,7 +20,7 @@ type rs struct {
 	response  *stuff.Response
 }
 
-func ResCheck(c *v1alpha1.ConditionResponse, v *variables.Store, r *stuff.Response) ResCheckInterface {
+func Res(c *v1alpha1.ConditionResponse, v *variables.Store, r *stuff.Response) Interface {
 	return &rs{
 		vars:      v,
 		condition: c,

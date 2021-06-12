@@ -66,6 +66,9 @@ var _ = Context("empty scenario", func() {
 var _ = Context("configMap scenario from yaml file", func() {
 	ctx := context.Background()
 	key := types.NamespacedName{Name: "example-config", Namespace: ns}
+	key1 := types.NamespacedName{Name: "example-config-fail", Namespace: ns}
+	key2 := types.NamespacedName{Name: "example-config-fail2", Namespace: ns}
+
 	cfgPath := filepath.Join("..", "config", "test", "configmap.yaml")
 
 	It("Should create successfully", func() {
@@ -82,6 +85,19 @@ var _ = Context("configMap scenario from yaml file", func() {
 		Expect(sc1.Status.Variables).ShouldNot(BeEmpty())
 		By("not save secret config map into variable")
 		Expect(sc1.Status.Variables).ShouldNot(ConsistOf("key1", "key2"))
+
+		By("fail as completion scenario not contain required value")
+		Eventually(func() bool {
+			err := k8sClient.Get(ctx, key1, sc1)
+			fmt.Println(sc1.Status)
+			return err != nil || sc1.Status.State == scenariosv1alpha1.Failed
+		}, timeout, interval).Should(BeTrue())
+
+		By("fail as completion scenario not equal required value")
+		Eventually(func() bool {
+			err := k8sClient.Get(ctx, key2, sc1)
+			return err != nil || sc1.Status.State == scenariosv1alpha1.Failed
+		}, timeout, interval).Should(BeTrue())
 	})
 })
 

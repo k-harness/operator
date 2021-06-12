@@ -26,5 +26,62 @@ spec:
     - name: stub check
       step:
         - name: ""
+          complete:
+            condition:
+              - variables:
+                  kv:
+                    key1:
+                      operator: equal
+                      value: val1
+---
+apiVersion: core.karness.io/v1alpha1
+kind: Scenario
+metadata:
+  name: example-config-fail
+  namespace: default
+spec:
+  name: "test karness"
+  description: "completion required non existed key from configmap"
+  from_config_map:
+    - name: example-config
+      #namespace: default # comment it and check if it would be properly loaded
+  variables:
+    XXX_KEY: YYY_VALUE
+  events:
+    - name: stub check
+      step:
+        - name: ""
+          complete:
+            condition:
+              - variables:
+                  kv:
+                    nonexisted-key:
+                      operator: required
+---
+apiVersion: core.karness.io/v1alpha1
+kind: Scenario
+metadata:
+  name: example-config-fail2
+  namespace: default
+spec:
+  name: "test karness"
+  description: "completion required key value not equal that exist"
+  from_config_map:
+    - name: example-config
+      #namespace: default # comment it and check if it would be properly loaded
+  variables:
+    XXX_KEY: YYY_VALUE
+  events:
+    - name: stub check
+      step:
+        - name: ""
+          complete:
+            condition:
+              - variables:
+                  kv:
+                    key1:
+                      operator: equal
+                      value: "100500"
+
 
 

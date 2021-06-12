@@ -59,7 +59,6 @@ var _ = BeforeSuite(func() {
 		//	Paths:              []string{filepath.Join("..", "config", "samples", "example")},
 		//	ErrorIfPathMissing: true,
 		//},
-
 	}
 
 	err := scenariosv1alpha1.AddToScheme(scheme.Scheme)
