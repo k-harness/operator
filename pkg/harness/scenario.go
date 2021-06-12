@@ -6,6 +6,7 @@ import (
 
 	"github.com/k-harness/operator/api/v1alpha1"
 	"github.com/k-harness/operator/pkg/harness/variables"
+	"golang.org/x/sync/errgroup"
 )
 
 type scenarioProcessor struct {
@@ -15,7 +16,7 @@ type scenarioProcessor struct {
 
 func NewScenarioProcessor(item *v1alpha1.Scenario, protected map[string]string) *scenarioProcessor {
 	item.Status.Of = len(item.Spec.Events)
-	item.Status.Progress = fmt.Sprintf("%s/%s", item.EventName(), item.StepName())
+	item.Status.Progress = fmt.Sprintf("%s/%s", item.EventName(), item.StepName(0))
 	item.Status.State = v1alpha1.Ready
 
 	if item.Status.Variables == nil {
@@ -36,13 +37,21 @@ func (s *scenarioProcessor) Step(ctx context.Context) error {
 	}
 
 	s.Status.State = v1alpha1.InProgress
+	e := s.Spec.Events[s.Status.Idx]
 
-	if err := s.process(ctx); err != nil {
+	wg := errgroup.Group{}
+	for i := 0; i < e.Concurrency(); i++ {
+		wg.Go(func() error {
+			return s.process(ctx)
+		})
+	}
+
+	if err := wg.Wait(); err != nil {
 		s.Status.State = v1alpha1.Failed
 		return err
 	}
 
-	if s.Next() {
+	if s.Next(e.Concurrency()) {
 		s.Status.State = v1alpha1.Complete
 	}
 
@@ -54,15 +63,18 @@ func (s *scenarioProcessor) process(ctx context.Context) error {
 		return nil
 	}
 
-	ss := s.Spec.Events[s.Status.Idx].Step[s.Status.Step]
 	v := variables.New(s.Status.Variables, s.protected)
-	stepper := NewStep(ss, v)
 
-	if err := stepper.Go(ctx); err != nil {
-		return err
+	e := s.Spec.Events[s.Status.Idx]
+	for idx, step := range e.Step {
+		stepper := NewStep(step, v)
+
+		if err := stepper.Go(ctx); err != nil {
+			return fmt.Errorf("event %q step %q err: %w", s.EventName(), s.StepName(idx), err)
+		}
+
+		stepper.UpdateStore(s.Status.Variables)
 	}
-
-	stepper.UpdateStore(s.Status.Variables)
 
 	return nil
 }

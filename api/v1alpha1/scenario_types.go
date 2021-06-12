@@ -57,8 +57,6 @@ type ScenarioStatus struct {
 	// Idx current scenario in progress
 	Idx int `json:"idx"`
 
-	Step int `json:"step"`
-
 	// Of total events in scenario list
 	Of int `json:"of"`
 
@@ -92,17 +90,12 @@ type Scenario struct {
 }
 
 // Next shift step and event counter, returns true if complete all
-func (in *Scenario) Next() bool {
-	in.Status.Step++
+func (in *Scenario) Next(i int) bool {
+	in.Status.Repeat += i
 
-	if in.Status.Step >= len(in.Spec.Events[in.Status.Idx].Step) {
-		in.Status.Step = 0
-		in.Status.Repeat++
-
-		if in.Status.Repeat >= in.Spec.Events[in.Status.Idx].Repeat {
-			in.Status.Idx++
-			in.Status.Repeat = 0
-		}
+	if in.Status.Repeat >= in.Spec.Events[in.Status.Idx].Repeat {
+		in.Status.Idx++
+		in.Status.Repeat = 0
 	}
 
 	return in.Status.Idx >= len(in.Spec.Events)
@@ -116,10 +109,10 @@ func (in *Scenario) EventName() string {
 	return ""
 }
 
-func (in *Scenario) StepName() string {
+func (in *Scenario) StepName(idx int) string {
 	if in.Status.Idx < len(in.Spec.Events) {
-		if e := in.Spec.Events[in.Status.Idx]; in.Status.Step < len(e.Step) {
-			return e.Step[in.Status.Step].Name
+		if e := in.Spec.Events[in.Status.Idx]; idx < len(e.Step) {
+			return e.Step[idx].Name
 		}
 	}
 
@@ -148,13 +141,21 @@ type Event struct {
 	// +kubebuilder:validation:Minimum=1
 	Repeat int `json:"repeat,omitempty"`
 
-	// ToDo: concurrency
-	// Run step paralel times
+	// Run step parallel times
 	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=10
+	// +kubebuilder:validation:Maximum=50
 	Concurrent int `json:"concurrent,omitempty"`
 
+	// sequence of operation performed by one worked
 	Step []Step `json:"step"`
+}
+
+func (in Event) Concurrency() int {
+	if in.Concurrent > 1 {
+		return in.Concurrent
+	}
+
+	return 1
 }
 
 type Step struct {

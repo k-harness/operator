@@ -110,7 +110,7 @@ c. add new version to  `versions` slice because it's required k8s at least in 1.
 * [*] secrets / config maps
 * [ ] event fire / listening
 * [*] sets inside action could
-* [ ] load tests (parallel launch of N scenarios)
+* [*] load tests (parallel launch of N scenarios)
 * [ ] templating - declare once action, repeat in any other scenario
 * [*] tests checking secrets/config-maps variable usage
 * [ ] var binding via regular expressions

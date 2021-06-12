@@ -63,8 +63,8 @@ spec:
                 items:
                   properties:
                     concurrent:
-                      description: 'ToDo: concurrency Run step paralel times'
-                      maximum: 10
+                      description: Run step parallel times
+                      maximum: 50
                       minimum: 1
                       type: integer
                     description:
@@ -76,6 +76,7 @@ spec:
                       minimum: 1
                       type: integer
                     step:
+                      description: sequence of operation performed by one worked
                       items:
                         properties:
                           action:
@@ -293,8 +294,6 @@ spec:
                 type: integer
               state:
                 type: string
-              step:
-                type: integer
               variables:
                 additionalProperties:
                   type: string
@@ -306,7 +305,6 @@ spec:
             - progress
             - repeat
             - state
-            - step
             - variables
             type: object
         type: object
