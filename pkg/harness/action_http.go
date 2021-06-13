@@ -75,7 +75,7 @@ func (in *httpRequest) Call(ctx context.Context, request *v1alpha1.Request) (*st
 			req.Header.Add("content-type", "application/json")
 		}
 
-		hResp, err = new(http.Client).Do(req)
+		hResp, err = http.DefaultClient.Do(req)
 	}
 
 	if err != nil {
