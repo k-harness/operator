@@ -547,6 +547,7 @@ spec:
         command:
         - /manager
         image: d7561985/karness-operator:master
+        imagePullPolicy: Always
         livenessProbe:
           httpGet:
             path: /healthz

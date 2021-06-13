@@ -12,12 +12,12 @@ import (
 )
 
 type step struct {
-	v1alpha1.Step
+	*v1alpha1.Step
 	v    *variables.Store
 	bind map[string]string
 }
 
-func NewStep(s v1alpha1.Step, v *variables.Store) *step {
+func NewStep(s *v1alpha1.Step, v *variables.Store) *step {
 	return &step{Step: s, v: v, bind: make(map[string]string)}
 }
 

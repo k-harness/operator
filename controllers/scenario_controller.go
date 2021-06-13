@@ -69,7 +69,8 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	if item.Status.State == scenariosv1alpha1.Complete {
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute}, nil
+		// temporally not requeue completed objects
+		return ctrl.Result{Requeue: false, RequeueAfter: time.Minute}, nil
 	}
 
 	protected := r.loadVault(ctx, item)
@@ -96,11 +97,18 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	// there as for v1 we should call special method r.Status().Update
 	item.Status = res.Status
 	if err := r.Status().Update(ctx, item, &client.UpdateOptions{}); err != nil {
-		r.Log.Error(err, "status update error", "event", step,
-			"status", item.Status, "meta", item.TypeMeta, "obg-meta", item.ObjectMeta)
+		// i noticed a bunch of error caused by already changed object...
+		if err = r.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: req.Name}, item); err == nil {
+			item.Status = res.Status
+			if err = r.Status().Update(ctx, item, &client.UpdateOptions{}); err != nil {
+				r.Log.Error(err, "status update error", "event", step,
+					"status", item.Status, "meta", item.TypeMeta, "obg-meta", item.ObjectMeta)
 
-		r.Recorder.Event(item, corev1.EventTypeWarning, "processor update",
-			fmt.Sprintf("event: %q error: %s", item.EventName(), err.Error()))
+				r.Recorder.Event(item, corev1.EventTypeWarning, "processor update",
+					fmt.Sprintf("event: %q error: %s", item.EventName(), err.Error()))
+			}
+		}
+
 		return ctrl.Result{RequeueAfter: time.Second}, nil
 	}
 

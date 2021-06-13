@@ -69,7 +69,7 @@ func (s *scenarioProcessor) process(ctx context.Context) error {
 
 	e := s.Spec.Events[s.Status.Idx]
 	for idx, step := range e.Step {
-		stepper := NewStep(step, v)
+		stepper := NewStep(step.DeepCopy(), v)
 
 		if err := stepper.Go(ctx); err != nil {
 			return fmt.Errorf("event %q step %q err: %w", s.EventName(), s.StepName(idx), err)
