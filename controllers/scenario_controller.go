@@ -54,49 +54,34 @@ type ScenarioReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.2/pkg/reconcile
 func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	r.Log.WithValues("scenario", req.NamespacedName, "name", req.Name, "ns", req.Namespace).Info("")
-
 	// your logic here
 	item := &scenariosv1alpha1.Scenario{}
 	if err := r.Get(ctx, types.NamespacedName{
 		Namespace: req.Namespace,
 		Name:      req.Name,
 	}, item); err != nil {
-		return ctrl.Result{RequeueAfter: 5 * time.Second}, err
+		r.Recorder.Event(item, corev1.EventTypeWarning, "get scenario", err.Error())
+		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute}, err
 	}
 
-	if item.IsBeingDeleted() ||
-		item.Status.State == scenariosv1alpha1.Complete {
+	if item.IsBeingDeleted() {
 		return ctrl.Result{}, nil
 	}
 
+	if item.Status.State == scenariosv1alpha1.Complete {
+		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute}, nil
+	}
+
+	protected := r.loadVault(ctx, item)
 	step := item.EventName()
+	res := item.DeepCopy()
 
-	//
-	protected, err := r.loadConfig(ctx, item.Spec.FromConfigMap, req.Namespace)
-	if err != nil {
-		r.Log.Error(err, "load config map", "step", step)
-		r.Recorder.Event(item, corev1.EventTypeWarning, "load config map", err.Error())
-	}
-
-	protectedSecret, err := r.loadSecret(ctx, item.Spec.FromSecret, req.Namespace)
-	if err != nil {
-		r.Log.Error(err, "load secret", "step", step)
-		r.Recorder.Event(item, corev1.EventTypeWarning, "load secret", err.Error())
-	}
-
-	for k, v := range protectedSecret {
-		protected[k] = v
-	}
-
-	if err := harness2.NewScenarioProcessor(item, protected).Step(ctx); err != nil {
+	if err := harness2.NewScenarioProcessor(res, protected).Step(ctx); err != nil {
 		r.Log.Error(err, "scenario process",
 			"step", step, "status", item.Status, "meta", item.TypeMeta, "obg-meta", item.ObjectMeta)
 
 		r.Recorder.Event(item, corev1.EventTypeWarning, "processor start",
 			fmt.Sprintf("event: %q error: %s", step, err.Error()))
-
-		//return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	} else {
 		r.Recorder.Event(item, corev1.EventTypeNormal, "step complete", step)
 		r.Log.Info("Complete step", "step", item.Status.Idx, "of", item.Status.Of,
@@ -109,16 +94,37 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	// ToDo: crd:v1beta1 and v1 has different flow for saving
 	// for v1beta1 we should call r.Update method
 	// there as for v1 we should call special method r.Status().Update
-	if err := r.Status().Update(ctx, item.DeepCopy()); err != nil {
+	item.Status = res.Status
+	if err := r.Status().Update(ctx, item, &client.UpdateOptions{}); err != nil {
 		r.Log.Error(err, "status update error", "event", step,
 			"status", item.Status, "meta", item.TypeMeta, "obg-meta", item.ObjectMeta)
 
 		r.Recorder.Event(item, corev1.EventTypeWarning, "processor update",
 			fmt.Sprintf("event: %q error: %s", item.EventName(), err.Error()))
-		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		return ctrl.Result{RequeueAfter: time.Second}, nil
 	}
 
-	return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+	return ctrl.Result{RequeueAfter: time.Second}, nil
+}
+
+func (r *ScenarioReconciler) loadVault(ctx context.Context, item *scenariosv1alpha1.Scenario) map[string]string {
+	protected, err := r.loadConfig(ctx, item.Spec.FromConfigMap, item.Namespace)
+	if err != nil {
+		r.Log.Error(err, "load config map")
+		r.Recorder.Event(item, corev1.EventTypeWarning, "load config map", err.Error())
+	}
+
+	protectedSecret, err := r.loadSecret(ctx, item.Spec.FromSecret, item.Namespace)
+	if err != nil {
+		r.Log.Error(err, "load secret")
+		r.Recorder.Event(item, corev1.EventTypeWarning, "load secret", err.Error())
+	}
+
+	for k, v := range protectedSecret {
+		protected[k] = v
+	}
+
+	return protected
 }
 
 // SetupWithManager sets up the controller with the Manager.

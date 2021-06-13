@@ -21,299 +21,299 @@ spec:
     singular: scenario
   scope: Namespaced
   versions:
-    - name: v0
-      served: false
-      storage: false
-    - additionalPrinterColumns:
-        - description: Event/Step name
-          JSONPath: .status.progress
-          name: Current Step
-          type: string
-        - description: Current execution progress
-          JSONPath: .status.idx
-          name: Idx
-          type: integer
-        - description: Total events in queue
-          JSONPath: .status.of
-          name: Of
-          type: integer
-        - description: Repeat number
-          JSONPath: .status.repeat
-          name: Repeat
-          type: integer
-        - description: Status where is current progress
-          JSONPath: .status.state
-          name: Status
-          type: string
-      name: v1alpha1
-      schema:
-        openAPIV3Schema:
-          description: Scenario is the Schema for the scenarios API
-          properties:
-            apiVersion:
-              description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-              type: string
-            kind:
-              description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-              type: string
-            metadata:
-              type: object
-            spec:
-              description: ScenarioSpec defines the desired state of Scenario
-              properties:
-                description:
-                  type: string
-                events:
-                  items:
-                    properties:
-                      concurrent:
-                        description: 'ToDo: concurrency Run step paralel times'
-                        maximum: 10
-                        minimum: 1
-                        type: integer
-                      description:
-                        type: string
-                      name:
-                        type: string
-                      repeat:
-                        description: Repeat current item times
-                        minimum: 1
-                        type: integer
-                      step:
-                        items:
-                          properties:
-                            action:
-                              properties:
-                                bind_result:
-                                  additionalProperties:
-                                    type: string
-                                  description: 'BindResult save result KV representation in global variable storage This works only when result returns as JSON or maybe anything marshalable Right now only JSON supposed to be Key: result_key Val: variable name for binding'
-                                  type: object
-                                request:
-                                  description: makes requests via some transport protocols
-                                  properties:
-                                    body:
-                                      properties:
-                                        byte:
-                                          format: byte
-                                          type: string
-                                        kv:
-                                          additionalProperties:
-                                            type: string
-                                          description: 'ToDo: validate oneOF'
-                                          type: object
-                                        row:
-                                          type: string
-                                        type:
-                                          enum:
-                                            - json
-                                            - xml
-                                          type: string
-                                      required:
-                                        - type
-                                      type: object
-                                    connect:
-                                      description: Connect transport used by actor
-                                      properties:
-                                        grpc:
-                                          properties:
-                                            addr:
-                                              description: 'required: true'
-                                              type: string
-                                            package:
-                                              description: 'Proto package name required: true'
-                                              type: string
-                                            rpc:
-                                              description: rpc command
-                                              type: string
-                                            service:
-                                              description: 'required: true'
-                                              type: string
-                                          required:
-                                            - addr
-                                            - package
-                                            - rpc
-                                            - service
-                                          type: object
-                                        http:
-                                          properties:
-                                            addr:
-                                              type: string
-                                            method:
-                                              enum:
-                                                - GET
-                                                - POST
-                                                - PUT
-                                                - DELETE
-                                              type: string
-                                            path:
-                                              type: string
-                                            query:
-                                              additionalProperties:
-                                                type: string
-                                              type: object
-                                          required:
-                                            - addr
-                                            - method
-                                          type: object
-                                      type: object
-                                    header:
-                                      additionalProperties:
-                                        type: string
-                                      type: object
-                                  required:
-                                    - body
-                                    - connect
-                                  type: object
-                              type: object
-                            complete:
-                              properties:
-                                condition:
-                                  items:
-                                    description: Condition of complete show reason
+  - name: v0
+    storage: false
+    served: false
+  - additionalPrinterColumns:
+    - description: Event/Step name
+      JSONPath: .status.progress
+      name: Current Step
+      type: string
+    - description: Current execution progress
+      JSONPath: .status.idx
+      name: Idx
+      type: integer
+    - description: Total events in queue
+      JSONPath: .status.of
+      name: Of
+      type: integer
+    - description: Repeat number
+      JSONPath: .status.repeat
+      name: Repeat
+      type: integer
+    - description: Status where is current progress
+      JSONPath: .status.state
+      name: Status
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Scenario is the Schema for the scenarios API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ScenarioSpec defines the desired state of Scenario
+            properties:
+              description:
+                type: string
+              events:
+                items:
+                  properties:
+                    concurrent:
+                      description: Run step parallel times
+                      maximum: 50
+                      minimum: 1
+                      type: integer
+                    description:
+                      type: string
+                    name:
+                      type: string
+                    repeat:
+                      description: Repeat current item times
+                      minimum: 1
+                      type: integer
+                    step:
+                      description: sequence of operation performed by one worked
+                      items:
+                        properties:
+                          action:
+                            properties:
+                              bind_result:
+                                additionalProperties:
+                                  type: string
+                                description: 'BindResult save result KV representation in global variable storage This works only when result returns as JSON or maybe anything marshalable Right now only JSON supposed to be Key: result_key Val: variable name for binding'
+                                type: object
+                              request:
+                                description: makes requests via some transport protocols
+                                properties:
+                                  body:
                                     properties:
-                                      response:
-                                        description: Response of condition check
+                                      byte:
+                                        format: byte
+                                        type: string
+                                      kv:
+                                        additionalProperties:
+                                          type: string
+                                        description: 'ToDo: validate oneOF http form required KV only'
+                                        type: object
+                                      row:
+                                        type: string
+                                      type:
+                                        enum:
+                                        - json
+                                        - xml
+                                        type: string
+                                    required:
+                                    - type
+                                    type: object
+                                  connect:
+                                    description: Connect transport used by actor
+                                    properties:
+                                      grpc:
                                         properties:
-                                          body:
-                                            properties:
-                                              byte:
-                                                format: byte
-                                                type: string
-                                              kv:
-                                                additionalProperties:
-                                                  type: string
-                                                description: 'ToDo: validate oneOF'
-                                                type: object
-                                              row:
-                                                type: string
-                                              type:
-                                                enum:
-                                                  - json
-                                                  - xml
-                                                type: string
-                                            required:
-                                              - type
-                                            type: object
-                                          status:
+                                          addr:
+                                            description: 'required: true'
+                                            type: string
+                                          package:
+                                            description: 'Proto package name required: true'
+                                            type: string
+                                          rpc:
+                                            description: rpc command
+                                            type: string
+                                          service:
+                                            description: 'required: true'
                                             type: string
                                         required:
-                                          - body
-                                          - status
+                                        - addr
+                                        - package
+                                        - rpc
+                                        - service
                                         type: object
-                                      variables:
+                                      http:
                                         properties:
-                                          kv:
+                                          addr:
+                                            type: string
+                                          form:
+                                            description: 'send as post form method warning: body required KV only'
+                                            type: boolean
+                                          method:
+                                            enum:
+                                            - GET
+                                            - POST
+                                            - PUT
+                                            - DELETE
+                                            type: string
+                                          path:
+                                            type: string
+                                          query:
                                             additionalProperties:
-                                              properties:
-                                                operator:
-                                                  description: how should we check value or key provided
-                                                  enum:
-                                                    - required
-                                                    - equal
-                                                  type: string
-                                                value:
-                                                  type: string
-                                              required:
-                                                - operator
-                                              type: object
-                                            description: key of map represent storage key
+                                              type: string
                                             type: object
+                                        required:
+                                        - addr
+                                        - method
                                         type: object
                                     type: object
-                                  type: array
-                                description:
-                                  type: string
-                              required:
-                                - condition
-                              type: object
-                            name:
-                              type: string
-                          type: object
-                        type: array
-                    required:
-                      - name
-                      - step
-                    type: object
-                  type: array
-                from_config_map:
-                  items:
-                    properties:
-                      name:
-                        type: string
-                      namespace:
-                        description: by default use ns where scenario located
-                        type: string
-                    required:
-                      - name
-                    type: object
-                  type: array
-                from_secret:
-                  items:
-                    properties:
-                      name:
-                        type: string
-                      namespace:
-                        description: by default use ns where scenario located
-                        type: string
-                    required:
-                      - name
-                    type: object
-                  type: array
-                name:
-                  description: Foo is an example field of Scenario. Edit scenario_types.go to remove/update
-                  type: string
-                variables:
-                  additionalProperties:
-                    type: string
+                                  header:
+                                    additionalProperties:
+                                      type: string
+                                    type: object
+                                required:
+                                - connect
+                                type: object
+                            type: object
+                          complete:
+                            properties:
+                              condition:
+                                items:
+                                  description: Condition of complete show reason
+                                  properties:
+                                    response:
+                                      description: Response of condition check
+                                      properties:
+                                        body:
+                                          properties:
+                                            byte:
+                                              format: byte
+                                              type: string
+                                            kv:
+                                              additionalProperties:
+                                                type: string
+                                              description: 'ToDo: validate oneOF http form required KV only'
+                                              type: object
+                                            row:
+                                              type: string
+                                            type:
+                                              enum:
+                                              - json
+                                              - xml
+                                              type: string
+                                          required:
+                                          - type
+                                          type: object
+                                        status:
+                                          type: string
+                                      required:
+                                      - body
+                                      - status
+                                      type: object
+                                    variables:
+                                      properties:
+                                        kv:
+                                          additionalProperties:
+                                            properties:
+                                              operator:
+                                                description: how should we check value or key provided
+                                                enum:
+                                                - required
+                                                - equal
+                                                type: string
+                                              value:
+                                                type: string
+                                            required:
+                                            - operator
+                                            type: object
+                                          description: key of map represent storage key
+                                          type: object
+                                      type: object
+                                  type: object
+                                type: array
+                              description:
+                                type: string
+                            required:
+                            - condition
+                            type: object
+                          name:
+                            type: string
+                        type: object
+                      type: array
+                  required:
+                  - name
+                  - step
                   type: object
-              required:
-                - events
-                - name
-              type: object
-            status:
-              description: "ScenarioStatus defines the observed state of Scenario \n INSERT ADDITIONAL STATUS FIELD - define observed state of cluster Important: Run \"make\" to regenerate code after modifying this file"
-              properties:
-                idx:
-                  description: Idx current scenario in progress
-                  type: integer
-                of:
-                  description: Of total events in scenario list
-                  type: integer
-                progress:
-                  type: string
-                repeat:
-                  description: Count of repeat current state
-                  type: integer
-                state:
-                  type: string
-                step:
-                  type: integer
-                variables:
-                  additionalProperties:
-                    type: string
-                  description: storage
+                type: array
+              from_config_map:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      description: by default use ns where scenario located
+                      type: string
+                  required:
+                  - name
                   type: object
-              required:
-                - idx
-                - of
-                - progress
-                - repeat
-                - state
-                - step
-                - variables
-              type: object
-          type: object
-      served: true
-      storage: true
-      subresources:
-        status: { }
+                type: array
+              from_secret:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      description: by default use ns where scenario located
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
+              name:
+                description: Foo is an example field of Scenario. Edit scenario_types.go to remove/update
+                type: string
+              variables:
+                additionalProperties:
+                  type: string
+                type: object
+            required:
+            - events
+            - name
+            type: object
+          status:
+            description: "ScenarioStatus defines the observed state of Scenario \n INSERT ADDITIONAL STATUS FIELD - define observed state of cluster Important: Run \"make\" to regenerate code after modifying this file"
+            properties:
+              idx:
+                description: Idx current scenario in progress
+                type: integer
+              of:
+                description: Of total events in scenario list
+                type: integer
+              progress:
+                type: string
+              repeat:
+                description: Count of repeat current state
+                type: integer
+              state:
+                type: string
+              variables:
+                additionalProperties:
+                  type: string
+                description: storage
+                type: object
+            required:
+            - idx
+            - of
+            - progress
+            - repeat
+            - state
+            - variables
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
 status:
   acceptedNames:
     kind: ""
     plural: ""
-  conditions: [ ]
-  storedVersions: [ ]
+  conditions: []
+  storedVersions: []
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -327,27 +327,27 @@ metadata:
   name: karness-leader-election-role
   namespace: karness-system
 rules:
-  - apiGroups:
-      - ""
-      - coordination.k8s.io
-    resources:
-      - configmaps
-      - leases
-    verbs:
-      - get
-      - list
-      - watch
-      - create
-      - update
-      - patch
-      - delete
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
-      - patch
+- apiGroups:
+  - ""
+  - coordination.k8s.io
+  resources:
+  - configmaps
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -355,88 +355,88 @@ metadata:
   creationTimestamp: null
   name: karness-manager-role
 rules:
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - secrets
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - core.karness.io
-    resources:
-      - scenarios
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - core.karness.io
-    resources:
-      - scenarios/finalizers
-    verbs:
-      - update
-  - apiGroups:
-      - core.karness.io
-    resources:
-      - scenarios/status
-    verbs:
-      - get
-      - patch
-      - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - core.karness.io
+  resources:
+  - scenarios
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - core.karness.io
+  resources:
+  - scenarios/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - core.karness.io
+  resources:
+  - scenarios/status
+  verbs:
+  - get
+  - patch
+  - update
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: karness-metrics-reader
 rules:
-  - nonResourceURLs:
-      - /metrics
-    verbs:
-      - get
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: karness-proxy-role
 rules:
-  - apiGroups:
-      - authentication.k8s.io
-    resources:
-      - tokenreviews
-    verbs:
-      - create
-  - apiGroups:
-      - authorization.k8s.io
-    resources:
-      - subjectaccessreviews
-    verbs:
-      - create
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -448,9 +448,9 @@ roleRef:
   kind: Role
   name: karness-leader-election-role
 subjects:
-  - kind: ServiceAccount
-    name: karness-controller-manager
-    namespace: karness-system
+- kind: ServiceAccount
+  name: karness-controller-manager
+  namespace: karness-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -461,9 +461,9 @@ roleRef:
   kind: ClusterRole
   name: karness-manager-role
 subjects:
-  - kind: ServiceAccount
-    name: karness-controller-manager
-    namespace: karness-system
+- kind: ServiceAccount
+  name: karness-controller-manager
+  namespace: karness-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -474,9 +474,9 @@ roleRef:
   kind: ClusterRole
   name: karness-proxy-role
 subjects:
-  - kind: ServiceAccount
-    name: karness-controller-manager
-    namespace: karness-system
+- kind: ServiceAccount
+  name: karness-controller-manager
+  namespace: karness-system
 ---
 apiVersion: v1
 data:
@@ -506,9 +506,9 @@ metadata:
   namespace: karness-system
 spec:
   ports:
-    - name: https
-      port: 8443
-      targetPort: https
+  - name: https
+    port: 8443
+    targetPort: https
   selector:
     control-plane: controller-manager
 ---
@@ -530,45 +530,45 @@ spec:
         control-plane: controller-manager
     spec:
       containers:
-        - args:
-            - --secure-listen-address=0.0.0.0:8443
-            - --upstream=http://127.0.0.1:8080/
-            - --logtostderr=true
-            - --v=10
-          image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
-          name: kube-rbac-proxy
-          ports:
-            - containerPort: 8443
-              name: https
-        - args:
-            - --health-probe-bind-address=:8081
-            - --metrics-bind-address=127.0.0.1:8080
-            - --leader-elect
-          command:
-            - /manager
-          image: d7561985/karness-operator:master
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 8081
-            initialDelaySeconds: 15
-            periodSeconds: 20
-          name: manager
-          readinessProbe:
-            httpGet:
-              path: /readyz
-              port: 8081
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          resources:
-            limits:
-              cpu: 100m
-              memory: 30Mi
-            requests:
-              cpu: 100m
-              memory: 20Mi
-          securityContext:
-            allowPrivilegeEscalation: false
+      - args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=10
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 8443
+          name: https
+      - args:
+        - --health-probe-bind-address=:8081
+        - --metrics-bind-address=127.0.0.1:8080
+        - --leader-elect
+        command:
+        - /manager
+        image: d7561985/karness-operator:master
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 100m
+            memory: 30Mi
+          requests:
+            cpu: 100m
+            memory: 20Mi
+        securityContext:
+          allowPrivilegeEscalation: false
       securityContext:
         runAsNonRoot: true
       serviceAccountName: karness-controller-manager

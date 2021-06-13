@@ -55,12 +55,14 @@ func (in *httpRequest) Call(ctx context.Context, request *v1alpha1.Request) (*st
 
 		hResp, err = http.DefaultClient.PostForm(uri.String(), val)
 	} else {
-		body, err := stuff.ScenarioBody(&request.Body).Get()
+		var body []byte
+		body, err = stuff.ScenarioBody(&request.Body).Get()
 		if err != nil {
 			return nil, fmt.Errorf("action can't exstract body: %w", err)
 		}
 
-		req, err := http.NewRequest(in.Method, uri.String(), bytes.NewBuffer(body))
+		var req *http.Request
+		req, err = http.NewRequest(in.Method, uri.String(), bytes.NewBuffer(body))
 		if err != nil {
 			return nil, fmt.Errorf("http init request %q erorr :%w", uri.String(), err)
 		}
@@ -73,7 +75,7 @@ func (in *httpRequest) Call(ctx context.Context, request *v1alpha1.Request) (*st
 			req.Header.Add("content-type", "application/json")
 		}
 
-		hResp, err = http.DefaultClient.Do(req)
+		hResp, err = new(http.Client).Do(req)
 	}
 
 	if err != nil {

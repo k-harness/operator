@@ -34,20 +34,20 @@ func (s *step) Go(ctx context.Context) error {
 	return nil
 }
 
-func (s *step) request(ctx context.Context) (r *stuff.Response, err error) {
+func (s *step) request(ctx context.Context) (res *stuff.Response, err error) {
 	if s.Action == nil {
 		return &stuff.Response{}, nil
 	}
 
 	action := NewRequest(s.Name, s.Action.Request, s.v)
 
-	res, err := action.Call(ctx)
+	res, err = action.Call(ctx)
 	switch {
 	case err == nil:
 		// if condition completion is empty, we can ignore that?
 	case errors.Is(err, ErrNoConnectionData) && s.Complete == nil:
 	default:
-		return r, fmt.Errorf("step call error: %w", err)
+		return nil, fmt.Errorf("step call error: %w", err)
 	}
 
 	// only if completion is OK we're able to bind action

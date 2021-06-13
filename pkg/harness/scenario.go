@@ -3,6 +3,7 @@ package harness
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/k-harness/operator/api/v1alpha1"
 	"github.com/k-harness/operator/pkg/harness/variables"
@@ -12,6 +13,7 @@ import (
 type scenarioProcessor struct {
 	*v1alpha1.Scenario
 	protected map[string]string
+	statusMx  sync.Mutex
 }
 
 func NewScenarioProcessor(item *v1alpha1.Scenario, protected map[string]string) *scenarioProcessor {
@@ -73,7 +75,9 @@ func (s *scenarioProcessor) process(ctx context.Context) error {
 			return fmt.Errorf("event %q step %q err: %w", s.EventName(), s.StepName(idx), err)
 		}
 
+		s.statusMx.Lock()
 		stepper.UpdateStore(s.Status.Variables)
+		s.statusMx.Unlock()
 	}
 
 	return nil
