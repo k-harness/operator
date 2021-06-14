@@ -65,9 +65,14 @@ func (s *scenarioProcessor) process(ctx context.Context) error {
 		return nil
 	}
 
-	v := variables.New(s.Status.Variables, s.protected)
-
 	e := s.Spec.Events[s.Status.Idx]
+	vars := s.Status.DeepCopy().Variables
+	for k, v := range e.Variables {
+		vars[k] = v
+	}
+
+	v := variables.New(vars, s.protected)
+
 	for idx, step := range e.Step {
 		stepper := NewStep(step.DeepCopy(), v)
 

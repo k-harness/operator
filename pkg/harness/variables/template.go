@@ -81,14 +81,15 @@ func (s *Store) TemplateMapOrReturnWhatPossible(in map[string]string) map[string
 		key, err := s.TemplateBytes([]byte(k))
 		if err != nil {
 			log.Printf("[ERR]: template map key %q error: %s", k, err)
-			key = []byte(k)
+			key = []byte(err.Error())
 		}
 
 		val, err := s.TemplateBytes([]byte(v))
 		if err != nil {
 			log.Printf("[ERR]: template map val %q  of key %q error: %s", v, k, err)
-			val = []byte(v)
+			val = []byte(err.Error())
 		}
+
 		res[string(key)] = string(val)
 	}
 

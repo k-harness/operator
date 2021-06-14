@@ -242,6 +242,11 @@ spec:
                             type: string
                         type: object
                       type: array
+                    variables:
+                      additionalProperties:
+                        type: string
+                      description: variables used in current event within all steps
+                      type: object
                   required:
                   - name
                   - step

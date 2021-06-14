@@ -136,6 +136,9 @@ type Event struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 
+	// variables used in current event within all steps
+	Variables map[string]string `json:"variables,omitempty"`
+
 	// Repeat current item times
 	// +kubebuilder:validation:Minimum=1
 	Repeat int `json:"repeat,omitempty"`
