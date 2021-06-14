@@ -1,8 +1,10 @@
 package variables
 
 import (
+	"crypto/md5"
 	"fmt"
 	"math/rand"
+	"net/url"
 	"testing"
 	"time"
 
@@ -15,6 +17,41 @@ func TestTemplateFunctions(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 
 	x := New(nil, nil)
+
+	t.Run("md5", func(t *testing.T) {
+		const expect = `869bc90a958424fd95dcc0d57d14be6f`
+		body := `{{ md5 "a=b&c=d"}}`
+		res := x.Template(body)
+		assert.Equal(t, expect, res)
+	})
+
+	t.Run("query", func(t *testing.T) {
+		const expect = `a=b&c=d`
+		body := `{{ query "c" "d" "a" "b"}}`
+		res := x.Template(body)
+		assert.Equal(t, expect, res)
+	})
+
+	t.Run("combination", func(t *testing.T) {
+		q := url.Values{"a": []string{"b"}}
+		target := fmt.Sprintf("%x", md5.Sum([]byte(q.Encode())))
+
+		body := `{{ md5 (query "a" "b") }}`
+		res := x.Template(body)
+		assert.Equal(t, target, res)
+	})
+
+	// concatenate result of function with variable + put output in other function
+	t.Run("advance concatenate + combination", func(t *testing.T) {
+		const v = "GOGO"
+		q := url.Values{"a": []string{"b"}}
+		target := fmt.Sprintf("%x", md5.Sum([]byte(q.Encode()+v)))
+
+		body := `{{ (printf "%s%s" (query "a" "b") .HELLO ) | md5 }}`
+		x := New(map[string]string{"HELLO": v}, nil)
+		res := x.Template(body)
+		assert.Equal(t, target, res)
+	})
 
 	t.Run("uuid", func(t *testing.T) {
 		body := `{{ uuid }}`
@@ -54,6 +91,7 @@ func TestTemplateFunctions(t *testing.T) {
 			})
 		}
 	})
+
 	t.Run("conditions", func(t *testing.T) {
 		const body = `{{$rv := range_int 1 100}}{{ $ch := le $rv 30}}{{ if $ch }}{{ .WIN }}{{else }}{{ .LOSE }}{{end}}`
 		for i := 0; i < 10; i++ {

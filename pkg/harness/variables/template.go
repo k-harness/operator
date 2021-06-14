@@ -2,7 +2,9 @@ package variables
 
 import (
 	"bytes"
+	"crypto/md5"
 	"fmt"
+	"net/url"
 	"text/template"
 
 	"log"
@@ -21,6 +23,17 @@ var TemplateFunctions = template.FuncMap{
 	},
 	"range_int": func(min, max int) int {
 		return rand.IntnRange(min, max)
+	},
+	"md5": func(in string) string {
+		return fmt.Sprintf("%x", md5.Sum([]byte(in)))
+	},
+	"query": func(args ...string) string {
+		vals := make(url.Values)
+		for i := 0; i < len(args); i += 2 {
+			vals.Add(args[i], args[i+1])
+		}
+
+		return vals.Encode()
 	},
 }
 

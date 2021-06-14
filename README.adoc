@@ -74,6 +74,26 @@ Example: `{{ rnd_str 32 }}`
 Generate random value from range `[min, max)`
 Returns error when min is greater or equal then max
 
+.md5 ::string
+calculate md5 hash of input string
+
+.query
+arts take any string slice, convert paris and return sorted and encoded query
+
+Example: `{{squery "a" "b" "c" "d"}}`
+
+===== Advance
+
+  We can combine functions, `md5` function takes result of `query` which has 2 args `a` and `b`
+
+Example: `{{ md5 (query "a" "b") }}`
+
+  Concatenate some functions output with  existed variables and drive output to another function
+
+Example: `{{(printf "%s%s" (query "a" "b") .HELLO ) | md5}}`
+
+exmaple combines result of `query` function with variable `.HELLO` and move output to `md5` function
+
 === Testing
 https://sdk.operatorframework.io/docs/building-operators/golang/testing/[SDK]
 
