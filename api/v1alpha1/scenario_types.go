@@ -39,7 +39,6 @@ type ScenarioSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of Scenario. Edit scenario_types.go to remove/update
-	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 
 	Events []Event `json:"events"`
