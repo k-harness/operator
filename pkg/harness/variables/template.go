@@ -18,6 +18,9 @@ var TemplateFunctions = template.FuncMap{
 	"uuid": func() string {
 		return uuid.New().String()
 	},
+	"rnd_int": func() int {
+		return rand.Int()
+	},
 	"rnd_str": func(len int) string {
 		return rand.String(len)
 	},

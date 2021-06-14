@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
@@ -17,6 +18,15 @@ func TestTemplateFunctions(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 
 	x := New(nil, nil)
+
+	t.Run("rnd_int", func(t *testing.T) {
+		body := `{{rnd_int}}`
+		res := x.Template(body)
+
+		v, err := strconv.Atoi(res)
+		assert.NoError(t, err)
+		assert.True(t, v > 0)
+	})
 
 	t.Run("md5", func(t *testing.T) {
 		const expect = `869bc90a958424fd95dcc0d57d14be6f`
