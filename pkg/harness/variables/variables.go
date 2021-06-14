@@ -1,20 +1,37 @@
 package variables
 
+import (
+	"bytes"
+	"text/template"
+)
+
 type Store struct {
 	store map[string]string
 }
 
 // New Store merge status variables with secrets vars
 // status variables has greater priority
-func New(status, protected map[string]string) *Store {
+func New(in ...map[string]string) *Store {
 	store := make(map[string]string)
-	for k, v := range protected {
-		store[k] = v
-	}
 
-	// over
-	for k, v := range status {
-		store[k] = v
+	buf := bytes.NewBuffer(nil)
+
+	// Note: super slow flow, i req. use sync.Map as this proc every work
+	for _, maps := range in {
+		for k, v := range maps {
+			buf.Reset()
+
+			t, err := template.New("x").
+				Funcs(TemplateFunctions).
+				Parse(v)
+			if err == nil {
+				if err = t.Execute(buf, nil); err == nil {
+					v = buf.String()
+				}
+			}
+
+			store[k] = v
+		}
 	}
 
 	return &Store{store: store}

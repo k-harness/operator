@@ -5,9 +5,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"path"
+	"time"
 
 	"github.com/k-harness/operator/api/v1alpha1"
 	"github.com/k-harness/operator/api/v1alpha1/models/action"
@@ -75,7 +77,18 @@ func (in *httpRequest) Call(ctx context.Context, request *v1alpha1.Request) (*st
 			req.Header.Add("content-type", "application/json")
 		}
 
-		hResp, err = http.DefaultClient.Do(req)
+		c := &http.Client{Transport: &http.Transport{
+			DialContext:           timerDialContext(11 * time.Second),
+			DisableKeepAlives:     true,
+			TLSHandshakeTimeout:   time.Second * 5,
+			DisableCompression:    false,
+			MaxIdleConns:          1,
+			MaxIdleConnsPerHost:   1,
+			MaxConnsPerHost:       1,
+			IdleConnTimeout:       0,
+			ExpectContinueTimeout: 0,
+		}}
+		hResp, err = c.Do(req)
 	}
 
 	if err != nil {
@@ -87,5 +100,24 @@ func (in *httpRequest) Call(ctx context.Context, request *v1alpha1.Request) (*st
 		return nil, fmt.Errorf("http action read result error :%w", err)
 	}
 
+	_ = hResp.Body.Close()
+	http.DefaultClient.CloseIdleConnections()
+
 	return &stuff.Response{Body: res, Code: fmt.Sprintf("%d", hResp.StatusCode)}, nil
+}
+
+func timerDialContext(duration time.Duration) func(ctx context.Context, network, address string) (net.Conn, error) {
+	return func(ctx context.Context, network, address string) (net.Conn, error) {
+		conn, err := (&net.Dialer{
+			Timeout:   duration,
+			KeepAlive: -1,
+			//FallbackDelay: -1,
+
+		}).DialContext(ctx, network, address)
+
+		if err == nil {
+			//conn.SetDeadline(time.Now().Add(duration))
+		}
+		return conn, err
+	}
 }

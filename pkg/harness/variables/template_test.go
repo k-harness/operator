@@ -17,7 +17,20 @@ import (
 func TestTemplateFunctions(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 
-	x := New(nil, nil)
+	x := New()
+
+	t.Run("func execution for variable inside", func(t *testing.T) {
+		xx := New(map[string]string{
+			"TIME": `{{ unix }}`,
+		})
+
+		body := `{{ .TIME}}`
+		res := xx.Template(body)
+		v, err := strconv.Atoi(res)
+		assert.NoError(t, err)
+		assert.True(t, v > 0)
+
+	})
 
 	t.Run("rnd_int", func(t *testing.T) {
 		body := `{{rnd_int}}`
