@@ -60,6 +60,9 @@ Main feature the same as variable in your system, you just fill placeholerd with
 ==== functions
 Some function called inside template which more flexible then only variable as we can use power of generator, for example
 
+.unix
+return unix timestamp
+
 .uuid
 First function, no arg required, so u can simle can generate uuid string
 

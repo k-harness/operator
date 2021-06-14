@@ -28,6 +28,15 @@ func TestTemplateFunctions(t *testing.T) {
 		assert.True(t, v > 0)
 	})
 
+	t.Run("unix", func(t *testing.T) {
+		body := `{{unix}}`
+		res := x.Template(body)
+
+		v, err := strconv.Atoi(res)
+		assert.NoError(t, err)
+		assert.True(t, v > 0)
+	})
+
 	t.Run("md5", func(t *testing.T) {
 		const expect = `869bc90a958424fd95dcc0d57d14be6f`
 		body := `{{ md5 "a=b&c=d"}}`

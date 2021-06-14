@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"text/template"
+	"time"
 
 	"log"
 
@@ -17,6 +18,9 @@ import (
 var TemplateFunctions = template.FuncMap{
 	"uuid": func() string {
 		return uuid.New().String()
+	},
+	"unix": func() int {
+		return int(time.Now().Unix())
 	},
 	"rnd_int": func() int {
 		return rand.Int()
