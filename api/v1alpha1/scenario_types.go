@@ -221,8 +221,9 @@ type Condition struct {
 
 // ConditionResponse contains competition condition for source
 type ConditionResponse struct {
-	Status string `json:"status"`
-	Body   Body   `json:"body"`
+	Status   *string                   `json:"status,omitempty"`
+	Body     *Body                     `json:"body,omitempty"`
+	JSONPath map[string]VarOptionCheck `json:"JSONPath,omitempty"`
 }
 
 type Operator string

@@ -107,7 +107,10 @@ var _ = Describe("scenario coverage", func() {
 								Complete: &v1alpha1.Completion{
 									Condition: []v1alpha1.Condition{{
 										Response: &v1alpha1.ConditionResponse{
-											Status: "200",
+											Status: strRef("200"),
+											JSONPath: map[string]v1alpha1.VarOptionCheck{
+												"{.token}": {Operator: v1alpha1.Equal, Value: token},
+											},
 										}},
 									},
 								},
@@ -195,7 +198,10 @@ var _ = Describe("scenario coverage", func() {
 								Complete: &v1alpha1.Completion{
 									Condition: []v1alpha1.Condition{{
 										Response: &v1alpha1.ConditionResponse{
-											Status: "OK",
+											JSONPath: map[string]v1alpha1.VarOptionCheck{
+												"{.message}": {},
+											},
+											Status: strRef("OK"),
 										}},
 									},
 								},
@@ -217,6 +223,7 @@ var _ = Describe("scenario coverage", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			By("expecting token appears in variables store")
+			By("checking Completion requirement - JSONPath + Status")
 			Expect(item.Status.Variables).Should(ConsistOf(token, "123"))
 		})
 	})

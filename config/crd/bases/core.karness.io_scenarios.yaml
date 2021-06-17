@@ -183,6 +183,22 @@ spec:
                                     response:
                                       description: Response of condition check
                                       properties:
+                                        JSONPath:
+                                          additionalProperties:
+                                            properties:
+                                              operator:
+                                                description: how should we check value
+                                                  or key provided
+                                                enum:
+                                                - required
+                                                - equal
+                                                type: string
+                                              value:
+                                                type: string
+                                            required:
+                                            - operator
+                                            type: object
+                                          type: object
                                         body:
                                           properties:
                                             byte:
@@ -206,9 +222,6 @@ spec:
                                           type: object
                                         status:
                                           type: string
-                                      required:
-                                      - body
-                                      - status
                                       type: object
                                     variables:
                                       properties:

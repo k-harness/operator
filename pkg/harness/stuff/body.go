@@ -16,6 +16,10 @@ type Body struct {
 }
 
 func (b *Body) Get() ([]byte, error) {
+	if b == nil {
+		return nil, nil
+	}
+
 	if len(b.Byte) > 0 {
 		return b.Byte, nil
 	}

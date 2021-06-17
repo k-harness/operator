@@ -119,7 +119,9 @@ func TestTemplateFunctions(t *testing.T) {
 				res, err := x.TemplateBytes([]byte(body))
 
 				assert.Equal(t, v.err, err != nil, err)
-				fmt.Println(string(res))
+				if err == nil {
+					assert.NotEmpty(t, res)
+				}
 			})
 		}
 	})
@@ -132,7 +134,7 @@ func TestTemplateFunctions(t *testing.T) {
 			res, err := x.TemplateBytes([]byte(body))
 
 			assert.NoError(t, err)
-			fmt.Println(string(res))
+			assert.NotEmpty(t, res)
 		}
 	})
 }
