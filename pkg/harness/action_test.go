@@ -2,9 +2,6 @@ package harness
 
 import (
 	"bytes"
-	"errors"
-	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/k-harness/operator/api/v1alpha1"
@@ -86,7 +83,7 @@ func TestActionResult_GetKeyValue(t *testing.T) {
 		{
 			"bad json path",
 			fields{Body: []byte(`{"message": 1}`)},
-			"message",
+			".message2",
 			"",
 			stuff.ErrBadJsonPath,
 		},
@@ -105,21 +102,10 @@ func TestActionResult_GetKeyValue(t *testing.T) {
 				Code: tt.fields.Code,
 				Body: tt.fields.Body,
 			}
+
 			got, err := a.GetKeyValue(tt.key)
-			fmt.Println(got)
-
-			if tt.wantErr != nil {
-				assert.True(t, errors.Is(err, tt.wantErr))
-			}
-
-			if (err != nil) != (tt.wantErr != nil) {
-				t.Errorf("GetKeyValue() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetKeyValue() got = %v(%[1]T), want %v(%[2]T)", got, tt.want)
-			}
+			assert.True(t, (tt.wantErr == nil) == (err == nil), err)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

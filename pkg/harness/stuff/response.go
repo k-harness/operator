@@ -45,7 +45,7 @@ func (a *Response) GetKeyValue(match string) (string, error) {
 
 	buf := bytes.NewBuffer(nil)
 	if err := j.Execute(buf, tmp); err != nil {
-		return "", fmt.Errorf("jsonpath execute error[%s]: %w", err, ErrNoKey)
+		return "", fmt.Errorf("jsonpath execute %q: %w", err, ErrNoKey)
 	}
 
 	if buf.String() == match {
