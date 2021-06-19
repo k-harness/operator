@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
+
 	"github.com/k-harness/operator/api/v1alpha1/models/action"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -43,10 +45,16 @@ type ScenarioSpec struct {
 
 	Events []Event `json:"events"`
 
-	Variables     map[string]string `json:"variables,omitempty"`
-	FromSecret    []NamespacedName  `json:"from_secret,omitempty"`
-	FromConfigMap []NamespacedName  `json:"from_config_map,omitempty"`
+	Variables     Variables        `json:"variables,omitempty"`
+	FromSecret    []NamespacedName `json:"from_secret,omitempty"`
+	FromConfigMap []NamespacedName `json:"from_config_map,omitempty"`
 }
+
+// Variables is simple key/value storage
+type Variables map[string]string
+
+// ThreadVariables represent values per thread used only
+type ThreadVariables map[string]Variables
 
 // ScenarioStatus defines the observed state of Scenario
 //
@@ -66,8 +74,8 @@ type ScenarioStatus struct {
 
 	State State `json:"state"`
 
-	// storage
-	Variables map[string]string `json:"variables"`
+	// storage based on concurrency
+	Variables ThreadVariables `json:"variables"`
 }
 
 //+kubebuilder:object:root=true
@@ -137,7 +145,11 @@ type Event struct {
 	Description string `json:"description,omitempty"`
 
 	// variables used in current event within all steps
-	Variables map[string]string `json:"variables,omitempty"`
+	// variables common for all steps
+	Variables Variables `json:"variables,omitempty"`
+
+	// variables unique for every step
+	StepVariables []Variables `json:"step_variables,omitempty"`
 
 	// Repeat current item times
 	// +kubebuilder:validation:Minimum=1
@@ -254,4 +266,29 @@ type NamespacedName struct {
 	Name string `json:"name"`
 	// by default use ns where scenario located
 	Namespace string `json:"namespace,omitempty"`
+}
+
+func (in *ThreadVariables) GetOrCreate(threadID int) Variables {
+	id := fmt.Sprintf("%d", threadID)
+
+	if *in == nil {
+		*in = make(ThreadVariables)
+	}
+
+	if _, ok := (*in)[id]; !ok {
+		(*in)[id] = make(Variables)
+	}
+
+	return (*in)[id]
+}
+
+func (in ThreadVariables) GetOrDefault(threadID int) Variables {
+	id := fmt.Sprintf("%d", threadID)
+	v, ok := in[id]
+
+	if ok {
+		return in.GetOrCreate(0)
+	}
+
+	return v
 }

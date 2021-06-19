@@ -255,10 +255,19 @@ spec:
                             type: string
                         type: object
                       type: array
+                    step_variables:
+                      description: variables unique for every step
+                      items:
+                        additionalProperties:
+                          type: string
+                        description: Variables is simple key/value storage
+                        type: object
+                      type: array
                     variables:
                       additionalProperties:
                         type: string
                       description: variables used in current event within all steps
+                        variables common for all steps
                       type: object
                   required:
                   - name
@@ -292,6 +301,7 @@ spec:
               variables:
                 additionalProperties:
                   type: string
+                description: Variables is simple key/value storage
                 type: object
             required:
             - events
@@ -316,8 +326,11 @@ spec:
                 type: string
               variables:
                 additionalProperties:
-                  type: string
-                description: storage
+                  additionalProperties:
+                    type: string
+                  description: Variables is simple key/value storage
+                  type: object
+                description: storage based on concurrency
                 type: object
             required:
             - idx

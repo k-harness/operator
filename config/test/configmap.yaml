@@ -15,7 +15,6 @@ metadata:
   name: example-config
   namespace: default
 spec:
-  name: "test karness"
   description: "check functionality"
   from_config_map:
     - name: example-config
@@ -40,7 +39,6 @@ metadata:
   name: example-config-fail
   namespace: default
 spec:
-  name: "test karness"
   description: "completion required non existed key from configmap"
   from_config_map:
     - name: example-config
@@ -64,7 +62,6 @@ metadata:
   name: example-config-fail2
   namespace: default
 spec:
-  name: "test karness"
   description: "completion required key value not equal that exist"
   from_config_map:
     - name: example-config

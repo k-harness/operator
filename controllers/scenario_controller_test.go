@@ -81,7 +81,7 @@ var _ = Context("configMap scenario from yaml file", func() {
 			return err != nil || sc1.Status.State == scenariosv1alpha1.Complete
 		}, timeout, interval).Should(BeTrue())
 
-		Expect(sc1.Status.Variables).ShouldNot(BeEmpty())
+		//Expect(sc1.Status.Variables.GetOrCreate(0)).ShouldNot(BeEmpty())
 		By("not save secret config map into variable")
 		Expect(sc1.Status.Variables).ShouldNot(ConsistOf("key1", "key2"))
 
@@ -116,7 +116,7 @@ var _ = Context("secret + scenario from yaml file", func() {
 			return err != nil || sc1.Status.State == scenariosv1alpha1.Complete
 		}, timeout, interval).Should(BeTrue())
 
-		Expect(sc1.Status.Variables).ShouldNot(BeEmpty())
+		//Expect(sc1.Status.Variables.GetOrCreate(0)).ShouldNot(BeEmpty())
 		By("not save secret into variable")
 		Expect(sc1.Status.Variables).ShouldNot(ConsistOf("key1", "key2"))
 

@@ -141,3 +141,4 @@ c. add new version to  `versions` slice because it's required k8s at least in 1.
 * [*] tests checking secrets/config-maps variable usage
 * [ ] var binding via regular expressions
 * [*] http post form
+* [*] variables per thread gives possibility perform huge extra requests (simultaneously send request to many users)

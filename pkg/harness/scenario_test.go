@@ -155,7 +155,7 @@ var _ = Describe("scenario coverage", func() {
 			Expect(fx.RequestAccepted.BodyMap["rnd_str"]).To(HaveLen(32))
 
 			By("expecting token appears in variables store")
-			Expect(item.Status.Variables).Should(ConsistOf(token, "123"))
+			Expect(item.Status.Variables.GetOrCreate(0)).Should(ConsistOf(token))
 		})
 	})
 
@@ -224,7 +224,7 @@ var _ = Describe("scenario coverage", func() {
 
 			By("expecting token appears in variables store")
 			By("checking Completion requirement - JSONPath + Status")
-			Expect(item.Status.Variables).Should(ConsistOf(token, "123"))
+			Expect(item.Status.Variables.GetOrCreate(0)).Should(ConsistOf(token))
 		})
 	})
 })

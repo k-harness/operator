@@ -21,12 +21,9 @@ func NewScenarioProcessor(item *v1alpha1.Scenario, protected map[string]string) 
 	item.Status.Progress = fmt.Sprintf("%s/%s", item.EventName(), item.StepName(0))
 	item.Status.State = v1alpha1.Ready
 
+	// should we duplicate variables to status?
 	if item.Status.Variables == nil {
-		item.Status.Variables = make(map[string]string)
-	}
-
-	for k, v := range item.Spec.Variables {
-		item.Status.Variables[k] = v
+		item.Status.Variables = make(v1alpha1.ThreadVariables)
 	}
 
 	return &scenarioProcessor{Scenario: item, protected: protected}
@@ -40,12 +37,17 @@ func (s *scenarioProcessor) Step(ctx context.Context) error {
 
 	s.Status.State = v1alpha1.InProgress
 	e := s.Spec.Events[s.Status.Idx]
+	if len(e.StepVariables) > 0 && len(e.StepVariables) != e.Concurrency() {
+		return fmt.Errorf("step variable not equal concurent")
+	}
 
 	wg := errgroup.Group{}
 	for i := 0; i < e.Concurrency(); i++ {
-		wg.Go(func() error {
-			return s.process(ctx)
-		})
+		func(i int) {
+			wg.Go(func() error {
+				return s.process(ctx, i)
+			})
+		}(i)
 	}
 
 	if err := wg.Wait(); err != nil {
@@ -60,13 +62,19 @@ func (s *scenarioProcessor) Step(ctx context.Context) error {
 	return nil
 }
 
-func (s *scenarioProcessor) process(ctx context.Context) error {
+func (s *scenarioProcessor) process(ctx context.Context, threadID int) error {
 	if len(s.Spec.Events[s.Status.Idx].Step) == 0 {
 		return nil
 	}
 
 	e := s.Spec.Events[s.Status.Idx]
-	v := variables.New(s.Status.Variables, s.protected, e.Variables)
+	var threadVars v1alpha1.Variables
+	if len(e.StepVariables) > threadID {
+		threadVars = e.StepVariables[threadID]
+	}
+
+	v := variables.New(
+		s.Spec.Variables, s.Status.Variables.GetOrCreate(threadID), s.protected, e.Variables, threadVars)
 
 	for idx, step := range e.Step {
 		stepper := NewStep(step.DeepCopy(), v)
@@ -75,9 +83,7 @@ func (s *scenarioProcessor) process(ctx context.Context) error {
 			return fmt.Errorf("event %q step %q err: %w", s.EventName(), s.StepName(idx), err)
 		}
 
-		s.statusMx.Lock()
-		stepper.UpdateStore(s.Status.Variables)
-		s.statusMx.Unlock()
+		stepper.UpdateStore(s.Status.Variables.GetOrCreate(threadID))
 	}
 
 	return nil
