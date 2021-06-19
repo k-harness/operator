@@ -63,6 +63,7 @@ spec:
                 type: string
               events:
                 items:
+                  description: Event ...
                   properties:
                     concurrent:
                       description: Run step parallel times
@@ -325,13 +326,13 @@ spec:
               state:
                 type: string
               variables:
-                additionalProperties:
+                description: storage based on concurrency
+                items:
                   additionalProperties:
                     type: string
                   description: Variables is simple key/value storage
                   type: object
-                description: storage based on concurrency
-                type: object
+                type: array
             required:
             - idx
             - of

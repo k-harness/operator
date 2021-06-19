@@ -17,8 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"fmt"
-
 	"github.com/k-harness/operator/api/v1alpha1/models/action"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -54,7 +52,7 @@ type ScenarioSpec struct {
 type Variables map[string]string
 
 // ThreadVariables represent values per thread used only
-type ThreadVariables map[string]Variables
+type ThreadVariables []Variables
 
 // ScenarioStatus defines the observed state of Scenario
 //
@@ -139,7 +137,7 @@ type ScenarioList struct {
 	Items           []Scenario `json:"items"`
 }
 
-//
+// Event ...
 type Event struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
@@ -264,31 +262,32 @@ func init() {
 
 type NamespacedName struct {
 	Name string `json:"name"`
+
 	// by default use ns where scenario located
 	Namespace string `json:"namespace,omitempty"`
 }
 
 func (in *ThreadVariables) GetOrCreate(threadID int) Variables {
-	id := fmt.Sprintf("%d", threadID)
-
 	if *in == nil {
-		*in = make(ThreadVariables)
+		*in = make(ThreadVariables, threadID)
 	}
 
-	if _, ok := (*in)[id]; !ok {
-		(*in)[id] = make(Variables)
+	if len(*in) <= threadID {
+		*in = append(*in, make(Variables))
+		return in.GetOrDefault(threadID)
 	}
 
-	return (*in)[id]
+	if (*in)[threadID] == nil {
+		(*in)[threadID] = make(Variables)
+	}
+
+	return (*in)[threadID]
 }
 
 func (in ThreadVariables) GetOrDefault(threadID int) Variables {
-	id := fmt.Sprintf("%d", threadID)
-	v, ok := in[id]
-
-	if ok {
-		return in.GetOrCreate(0)
+	if len(in) > threadID {
+		return in[threadID]
 	}
 
-	return v
+	return in.GetOrCreate(0)
 }

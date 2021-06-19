@@ -22,8 +22,8 @@ spec:
   scope: Namespaced
   versions:
   - name: v0
-    served: false
     storage: false
+    served: false
   - additionalPrinterColumns:
     - description: Event/Step name
       JSONPath: .status.progress
@@ -179,6 +179,21 @@ spec:
                                     response:
                                       description: Response of condition check
                                       properties:
+                                        JSONPath:
+                                          additionalProperties:
+                                            properties:
+                                              operator:
+                                                description: how should we check value or key provided
+                                                enum:
+                                                - required
+                                                - equal
+                                                type: string
+                                              value:
+                                                type: string
+                                            required:
+                                            - operator
+                                            type: object
+                                          type: object
                                         body:
                                           properties:
                                             byte:
@@ -201,9 +216,6 @@ spec:
                                           type: object
                                         status:
                                           type: string
-                                      required:
-                                      - body
-                                      - status
                                       type: object
                                     variables:
                                       properties:
@@ -235,10 +247,18 @@ spec:
                             type: string
                         type: object
                       type: array
+                    step_variables:
+                      description: variables unique for every step
+                      items:
+                        additionalProperties:
+                          type: string
+                        description: Variables is simple key/value storage
+                        type: object
+                      type: array
                     variables:
                       additionalProperties:
                         type: string
-                      description: variables used in current event within all steps
+                      description: variables used in current event within all steps variables common for all steps
                       type: object
                   required:
                   - name
@@ -272,6 +292,7 @@ spec:
               variables:
                 additionalProperties:
                   type: string
+                description: Variables is simple key/value storage
                 type: object
             required:
             - events
@@ -294,8 +315,11 @@ spec:
                 type: string
               variables:
                 additionalProperties:
-                  type: string
-                description: storage
+                  additionalProperties:
+                    type: string
+                  description: Variables is simple key/value storage
+                  type: object
+                description: storage based on concurrency
                 type: object
             required:
             - idx

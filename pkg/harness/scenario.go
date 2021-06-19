@@ -23,7 +23,7 @@ func NewScenarioProcessor(item *v1alpha1.Scenario, protected map[string]string) 
 
 	// should we duplicate variables to status?
 	if item.Status.Variables == nil {
-		item.Status.Variables = make(v1alpha1.ThreadVariables)
+		item.Status.Variables = make(v1alpha1.ThreadVariables, 0)
 	}
 
 	return &scenarioProcessor{Scenario: item, protected: protected}

@@ -390,18 +390,14 @@ func (in *ScenarioStatus) DeepCopyInto(out *ScenarioStatus) {
 	if in.Variables != nil {
 		in, out := &in.Variables, &out.Variables
 		*out = make(ThreadVariables, len(*in))
-		for key, val := range *in {
-			var outVal map[string]string
-			if val == nil {
-				(*out)[key] = nil
-			} else {
-				in, out := &val, &outVal
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
 				*out = make(Variables, len(*in))
 				for key, val := range *in {
 					(*out)[key] = val
 				}
 			}
-			(*out)[key] = outVal
 		}
 	}
 }
@@ -446,18 +442,14 @@ func (in ThreadVariables) DeepCopyInto(out *ThreadVariables) {
 	{
 		in := &in
 		*out = make(ThreadVariables, len(*in))
-		for key, val := range *in {
-			var outVal map[string]string
-			if val == nil {
-				(*out)[key] = nil
-			} else {
-				in, out := &val, &outVal
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
 				*out = make(Variables, len(*in))
 				for key, val := range *in {
 					(*out)[key] = val
 				}
 			}
-			(*out)[key] = outVal
 		}
 	}
 }
