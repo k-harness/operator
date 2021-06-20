@@ -108,8 +108,6 @@ func (r *ScenarioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 					fmt.Sprintf("event: %q error: %s", item.EventName(), err.Error()))
 			}
 		}
-
-		return ctrl.Result{RequeueAfter: time.Second}, nil
 	}
 
 	return ctrl.Result{RequeueAfter: time.Second}, nil

@@ -11,6 +11,7 @@ import (
 )
 
 type Fixture struct {
+	Addr   string
 	Res    interface{}
 	Status int
 
@@ -24,11 +25,16 @@ type Fixture struct {
 }
 
 func CreateMockServer(fx *Fixture) (net.Listener, *http.Server, error) {
-	l, err := net.Listen("tcp", ":0")
+	if fx.Addr == "" {
+		fx.Addr = ":0"
+	}
+
+	l, err := net.Listen("tcp", fx.Addr)
 	if err != nil {
 		return nil, nil, fmt.Errorf("listen erorr :%w", err)
 	}
 
+	x := http.NewServeMux()
 	h := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		// read request
 		if res, err := io.ReadAll(req.Body); err == nil {
@@ -50,10 +56,19 @@ func CreateMockServer(fx *Fixture) (net.Listener, *http.Server, error) {
 		w.WriteHeader(fx.Status)
 	})
 
-	srv := &http.Server{
-		Addr:    l.Addr().String(),
-		Handler: h,
-	}
+	x.Handle("/", h)
+	x.Handle("/echo", http.HandlerFunc(func(writer http.ResponseWriter, req *http.Request) {
+		if res, err := io.ReadAll(req.Body); err == nil {
+			fx.RequestAccepted.BodyRow = res
+			_, _ = writer.Write(res)
+			return
+		}
+
+		writer.WriteHeader(http.StatusInternalServerError)
+		_, _ = writer.Write([]byte(err.Error()))
+	}))
+
+	srv := &http.Server{Addr: l.Addr().String(), Handler: x}
 
 	go func() {
 		if err := srv.Serve(l); err != nil {

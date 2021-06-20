@@ -6,11 +6,14 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
 	scenariosv1alpha1 "github.com/k-harness/operator/api/v1alpha1"
+	httpexec2 "github.com/k-harness/operator/pkg/executor/httpexec"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -97,6 +100,75 @@ var _ = Context("configMap scenario from yaml file", func() {
 			err := k8sClient.Get(ctx, key2, sc1)
 			return err != nil || sc1.Status.State == scenariosv1alpha1.Failed
 		}, timeout, interval).Should(BeTrue())
+	})
+})
+
+var _ = Describe("", func() {
+	var (
+		l   net.Listener
+		srv *http.Server
+	)
+
+	BeforeEach(func() {
+		By("prepare http mock echo server")
+
+		var err error
+		l, srv, err = httpexec2.CreateMockServer(&httpexec2.Fixture{
+			Addr: ":8888"})
+
+		Expect(err).ShouldNot(HaveOccurred())
+
+		Eventually(func() bool {
+			_, err = http.Get("http://127.0.0.1:8888/echo")
+			return err == nil
+
+		}, timeout, interval).Should(BeTrue())
+	})
+
+	AfterEach(func() {
+		By("close mock server")
+
+		_ = l.Close()
+		_ = srv.Close()
+	})
+
+	var _ = Context("concurrency", func() {
+		ctx := context.Background()
+		key := types.NamespacedName{Name: "concurrency", Namespace: ns}
+
+		It("with step_variables > 0", func() {
+			// from manifest
+			const concurrency = 5
+			const repeat = 30
+
+			cfgPath := filepath.Join("..", "config", "test", "concurrency.yaml")
+			By("loading from file")
+			Expect(loadFixtures(cfgPath)).Should(Succeed())
+
+			sc1 := &scenariosv1alpha1.Scenario{}
+			By("1. step variable for every concurrency thread use own variable and send it to echo server with key ping")
+			By("2. bind response to thread variable PING")
+			By("3. next step use variable PING to send it in key pong to echo server")
+			By("4. bind response to thread variable PONG")
+
+			When("processor handle it", func() {
+				By("check progress")
+				Eventually(func() bool {
+					err := k8sClient.Get(ctx, key, sc1)
+
+					By("threaded variable status should be equal to concurrency number")
+					return err == nil && len(sc1.Status.Variables) == concurrency &&
+						sc1.Status.State == scenariosv1alpha1.Complete
+				}, timeout, interval).Should(BeTrue())
+			})
+
+			By("every thread variable contains PING/PONG vars with values equal to their thread number")
+			for i, variable := range sc1.Status.Variables {
+				val := fmt.Sprintf("%d", i)
+				Expect(variable).Should(HaveKeyWithValue("PONG", val),
+					HaveKeyWithValue("PING", val))
+			}
+		})
 	})
 })
 

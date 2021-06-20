@@ -1,0 +1,47 @@
+apiVersion: core.karness.io/v1alpha1
+kind: Scenario
+metadata:
+  name: concurrency
+  namespace: default
+spec:
+  events:
+    - name: XXX
+      description: |
+        send symulations request to echo server and save it to store
+        so next step should use it
+      concurrent: 5
+      repeat: 30
+      step_variables:
+        - ping: "0"
+        - ping: "1"
+        - ping: "2"
+        - ping: "3"
+        - ping: "4"
+      step:
+        - action:
+            bind_result:
+              PING: ".ping"
+            request:
+              connect:
+                http:
+                  addr: http://127.0.0.1:8888
+                  method: POST
+                  path: /echo
+              body:
+                type: json
+                kv:
+                  ping: "{{.ping}}"
+        - action:
+            bind_result:
+              PONG: ".pong"
+            request:
+              connect:
+                http:
+                  addr: http://127.0.0.1:8888
+                  method: POST
+                  path: /echo
+              body:
+                type: json
+                kv:
+                  pong: "{{.PING}}"
+

@@ -119,6 +119,17 @@ a. rename v1 => v1beta1 CustomResourceDefinition's apiVersion
 b. rename jsonPath => JSONPath in spec.versions[].additionalPrinterColumns
 c. add new version to  `versions` slice because it's required k8s at least in 1.15 version
 
+=== step variables flow
+system works little different with step_vars empty or not
+
+
+==== no ref to prev event, no ref to prev. step, concurency > 1, step_vars empty
+ToDo...
+
+==== no ref to prev event, no ref to prev. step, concurency > 1, step_vars not empty
+ToDo...
+
+
 == ToDo
 * [*] reconcile actor execute only 1 operation per reconciliation cycle
 * [*] variables should be part of status
