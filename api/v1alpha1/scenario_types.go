@@ -267,27 +267,25 @@ type NamespacedName struct {
 	Namespace string `json:"namespace,omitempty"`
 }
 
+// GetOrCreate retrieve Variable by thread
+// extend up to requested thread len of slice + do copy from default 0 thread store
 func (in *ThreadVariables) GetOrCreate(threadID int) Variables {
 	if *in == nil {
 		*in = make(ThreadVariables, threadID)
 	}
 
 	if len(*in) <= threadID {
-		*in = append(*in, make(Variables))
-		return in.GetOrDefault(threadID)
-	}
+		vs := make(Variables)
 
-	if (*in)[threadID] == nil {
-		(*in)[threadID] = make(Variables)
+		if len(*in) > 0 {
+			for k, v := range (*in)[0] {
+				vs[k] = v
+			}
+		}
+
+		*in = append(*in, vs)
+		return in.GetOrCreate(threadID)
 	}
 
 	return (*in)[threadID]
-}
-
-func (in ThreadVariables) GetOrDefault(threadID int) Variables {
-	if len(in) > threadID {
-		return in[threadID]
-	}
-
-	return in.GetOrCreate(0)
 }

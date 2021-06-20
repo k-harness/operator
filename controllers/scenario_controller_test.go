@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/google/uuid"
 	scenariosv1alpha1 "github.com/k-harness/operator/api/v1alpha1"
 	httpexec2 "github.com/k-harness/operator/pkg/executor/httpexec"
 	. "github.com/onsi/ginkgo"
@@ -103,7 +104,7 @@ var _ = Context("configMap scenario from yaml file", func() {
 	})
 })
 
-var _ = Describe("", func() {
+var _ = Describe("concurrency", func() {
 	var (
 		l   net.Listener
 		srv *http.Server
@@ -132,26 +133,26 @@ var _ = Describe("", func() {
 		_ = srv.Close()
 	})
 
-	var _ = Context("concurrency", func() {
+	var _ = Context("in one event", func() {
 		ctx := context.Background()
-		key := types.NamespacedName{Name: "concurrency", Namespace: ns}
+		// from manifest
+		const concurrency = 5
+		const repeat = 30
 
-		It("with step_variables > 0", func() {
-			// from manifest
-			const concurrency = 5
-			const repeat = 30
-
-			cfgPath := filepath.Join("..", "config", "test", "concurrency.yaml")
+		It("handle by controller", func() {
+			cfgPath := filepath.Join("..", "config", "test", "concurrency_in_one_events.yaml")
 			By("loading from file")
 			Expect(loadFixtures(cfgPath)).Should(Succeed())
 
-			sc1 := &scenariosv1alpha1.Scenario{}
-			By("1. step variable for every concurrency thread use own variable and send it to echo server with key ping")
-			By("2. bind response to thread variable PING")
-			By("3. next step use variable PING to send it in key pong to echo server")
-			By("4. bind response to thread variable PONG")
+			When("with step variables", func() {
+				key := types.NamespacedName{Name: "concurrency", Namespace: ns}
 
-			When("processor handle it", func() {
+				By("1. step variable for every concurrency thread use own variable and send it to echo server with key ping")
+				By("2. bind response to thread variable PING")
+				By("3. next step use variable PING to send it in key pong to echo server")
+				By("4. bind response to thread variable PONG")
+
+				sc1 := &scenariosv1alpha1.Scenario{}
 				By("check progress")
 				Eventually(func() bool {
 					err := k8sClient.Get(ctx, key, sc1)
@@ -160,14 +161,81 @@ var _ = Describe("", func() {
 					return err == nil && len(sc1.Status.Variables) == concurrency &&
 						sc1.Status.State == scenariosv1alpha1.Complete
 				}, timeout, interval).Should(BeTrue())
+
+				By("every thread variable contains PING/PONG vars with values equal to their thread number")
+				for i, variable := range sc1.Status.Variables {
+					val := fmt.Sprintf("%d", i)
+					Expect(variable).Should(HaveKeyWithValue("PONG", val),
+						HaveKeyWithValue("PING", val))
+				}
 			})
 
-			By("every thread variable contains PING/PONG vars with values equal to their thread number")
-			for i, variable := range sc1.Status.Variables {
-				val := fmt.Sprintf("%d", i)
-				Expect(variable).Should(HaveKeyWithValue("PONG", val),
-					HaveKeyWithValue("PING", val))
-			}
+			When("no step variables", func() {
+				key := types.NamespacedName{Name: "concurrency2", Namespace: ns}
+
+				By("1 send unique uuid per thread to echo server with key ping")
+				By("2. bind response to thread variable PING")
+				By("3. next step use variable PING to send it in key pong to echo server")
+				By("4. bind response to thread variable PONG")
+
+				sc1 := &scenariosv1alpha1.Scenario{}
+				By("check progress")
+				Eventually(func() bool {
+					err := k8sClient.Get(ctx, key, sc1)
+
+					By("threaded variable status should be equal to concurrency number")
+					return err == nil && len(sc1.Status.Variables) == concurrency &&
+						sc1.Status.State == scenariosv1alpha1.Complete
+				}, timeout, interval).Should(BeTrue())
+
+				By("every thread variable contains PING/PONG vars with uuid")
+				for _, variable := range sc1.Status.Variables {
+					Expect(variable).Should(HaveKey("PONG"),
+						HaveKey("PING"))
+
+					Expect(uuid.MustParse(variable["PONG"])).ShouldNot(Equal(uuid.Nil))
+					Expect(uuid.MustParse(variable["PING"])).ShouldNot(Equal(uuid.Nil))
+				}
+			})
+		})
+	})
+
+	var _ = Context("multi event", func() {
+		ctx := context.Background()
+		// from manifest
+		const concurrency = 5
+		const repeat = 30
+
+		It("handle by controller", func() {
+			cfgPath := filepath.Join("..", "config", "test", "concurrency_multi_events.yaml")
+			By("loading from file")
+			Expect(loadFixtures(cfgPath)).Should(Succeed())
+
+			When("save in non-concurrent event variable and use in concurrent", func() {
+				key := types.NamespacedName{Name: "concurrency-multy-events", Namespace: ns}
+
+				By("1. send to echo server from non concurrent event request with secret")
+				By("2. bind response to variable TOKEN")
+				By("3. multi-thread step use variable TOKEN to send it in key pong to echo server")
+				By("4. bind response to thread variable PONG")
+
+				sc1 := &scenariosv1alpha1.Scenario{}
+				By("check progress")
+				Eventually(func() bool {
+					err := k8sClient.Get(ctx, key, sc1)
+
+					By("threaded variable status should be equal to concurrency number")
+					return err == nil && len(sc1.Status.Variables) == concurrency &&
+						sc1.Status.State == scenariosv1alpha1.Complete
+				}, timeout, interval).Should(BeTrue())
+
+				By("every thread variable contains PING/PONG vars with uuid")
+				for _, variable := range sc1.Status.Variables {
+					Expect(variable).Should(HaveKey("PONG"))
+
+					Expect(uuid.MustParse(variable["PONG"])).ShouldNot(Equal(uuid.Nil))
+				}
+			})
 		})
 	})
 })
