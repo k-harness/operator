@@ -4,12 +4,15 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
+	"testing"
 	"time"
 
 	"github.com/google/uuid"
@@ -264,6 +267,67 @@ var _ = Context("secret + scenario from yaml file", func() {
 	})
 })
 
+var _ = Context("variables flow", func() {
+	var (
+		l   net.Listener
+		srv *http.Server
+		err error
+	)
+
+	BeforeEach(func() {
+		By("prepare http mock echo server")
+		l, srv, err = httpexec2.CreateMockServer(&httpexec2.Fixture{Addr: ":8888"})
+		Expect(err).ShouldNot(HaveOccurred())
+
+		Eventually(func() bool {
+			_, err = http.Get("http://127.0.0.1:8888/echo")
+			return err == nil
+
+		}, timeout, interval).Should(BeTrue())
+	})
+
+	AfterEach(func() {
+		By("close mock server")
+
+		_ = l.Close()
+		_ = srv.Close()
+	})
+
+	ctx := context.Background()
+	key := types.NamespacedName{Name: "variables", Namespace: ns}
+	cfgPath := filepath.Join("..", "config", "test", "variables.yaml")
+
+	It("Should create successfully", func() {
+		By("loading from file")
+		Expect(loadFixtures(cfgPath)).Should(Succeed())
+
+		// concurrency value in config
+		const threads = 2
+
+		By("binding variables S_WIN, S_LOST in secret")
+		By("binding WIN, LOST spec variables with secret variables")
+		By("binding E_WIN, E_LOST with with spec variables")
+		By("binding step_variables E_LOST with function uses event variables")
+
+		sc1 := &scenariosv1alpha1.Scenario{}
+		Eventually(func() bool {
+			err := k8sClient.Get(ctx, key, sc1)
+			return err != nil || sc1.Status.State == scenariosv1alpha1.Complete
+		}, timeout, interval).Should(BeTrue())
+
+		Expect(sc1.Status.Variables).Should(HaveLen(threads))
+
+		for i := 0; i < threads; i++ {
+			Expect(sc1.Status.Variables[i]).Should(HaveKey("RESPONSE"))
+			v := sc1.Status.Variables[i]["RESPONSE"]
+
+			x, err := strconv.ParseFloat(v, 32)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(x).Should(BeNumerically(">=", 0.0))
+		}
+	})
+})
+
 // loadFixtures yaml file and create into test cluster
 func loadFixtures(path string) error {
 	f, err := os.Open(path)
@@ -299,4 +363,10 @@ func loadFixtures(path string) error {
 	}
 
 	return nil
+}
+
+func TestA(t *testing.T) {
+	e := base64.NewEncoder(base64.StdEncoding, os.Stdout)
+	_, _ = e.Write([]byte("0"))
+	e.Close()
 }

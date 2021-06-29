@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: example-variables
+  namespace: default
+data:
+  S_WIN: MTA= # 10
+  S_LOST: MA== # 0
+---
+apiVersion: core.karness.io/v1alpha1
+kind: Scenario
+metadata:
+  name: variables
+  namespace: default
+spec:
+  description: check inheritence of variables
+  from_secret:
+    - name: example-variables
+      namespace: default
+  variables:
+    WIN: "{{ .S_WIN }}"
+    LOST: "{{ .S_LOST }}"
+  events:
+    - name: XXX
+      description: |
+        send symulations request to echo server and save it to store
+        so next step should use it with step variables
+      concurrent: 2
+      repeat: 30
+      variables:
+        E_WIN: "{{ .WIN }}"
+        E_LOST: "{{ .LOST }}"
+      step_variables:
+        - RESULT: "{{$rv := range_int 1 100}}{{ $ch := le $rv 50}}{{ if $ch }}{{ .E_WIN }}{{else }}{{ .E_LOST }}{{end}}"
+        - RESULT: "{{$rv := range_int 1 100}}{{ $ch := le $rv 50}}{{ if $ch }}{{ .E_WIN }}{{else }}{{ .E_LOST }}{{end}}"
+      step:
+        - action:
+            bind_result:
+              RESPONSE: ".order"
+            request:
+              connect:
+                http:
+                  addr: http://127.0.0.1:8888
+                  method: POST
+                  path: /echo
+              body:
+                type: json
+                kv:
+                  order: "{{ .RESULT }}"

@@ -135,6 +135,7 @@ func TestTemplateFunctions(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.NotEmpty(t, res)
+			assert.True(t, string(res) == "10.00" || string(res) == "0.00")
 		}
 	})
 }

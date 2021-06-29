@@ -73,8 +73,14 @@ func (s *scenarioProcessor) process(ctx context.Context, threadID int) error {
 		threadVars = e.StepVariables[threadID]
 	}
 
+	// we should be aware that any variable can easily can be part of another
+	// * protected from secret: all
+	// * spec variable: all except secret (it not possible and not required)
+	// * status variables (bound variables):  all event variables could use this (but is it really?)
+	// *  event variables and step variables are used in the same level user really don't have reason to use this values inside,
+	// by the way step variable can use variables from events
 	v := variables.New(
-		s.Spec.Variables, s.Status.Variables.GetOrCreate(threadID), s.protected, e.Variables, threadVars)
+		s.protected, s.Spec.Variables, s.Status.Variables.GetOrCreate(threadID), e.Variables, threadVars)
 
 	for idx, step := range e.Step {
 		stepper := NewStep(step.DeepCopy(), v)

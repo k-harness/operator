@@ -25,7 +25,7 @@ func New(in ...map[string]string) *Store {
 				Funcs(TemplateFunctions).
 				Parse(v)
 			if err == nil {
-				if err = t.Execute(buf, nil); err == nil {
+				if err = t.Execute(buf, store); err == nil {
 					v = buf.String()
 				}
 			}
