@@ -86,7 +86,7 @@ calculate md5 hash of input string
 .query
 arts take any string slice, convert paris and return sorted and encoded query
 
-Example: `{{squery "a" "b" "c" "d"}}`
+Example: `{{query "a" "b" "c" "d"}}`
 
 ===== Advance
 
